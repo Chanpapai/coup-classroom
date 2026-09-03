@@ -4,8 +4,8 @@
 
 // เอามาจาก Supabase → Project Settings → Data API
 // anon key เปิดเผยได้ ปลอดภัย เพราะกติกาทั้งหมดตัดสินที่ Edge Function
-export const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-export const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+export const SUPABASE_URL = 'https://mquxilriwbdbveiqlxvk.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_YdxPBj2-dwfQ4nziDQCSdA_FkHRXPJI';
 
 // ── รูปการ์ดของคุณ ──
 // เอาไฟล์รูปไปวางใน assets/cards/ ใช้ชื่อตามนี้ แล้วจบ ไม่ต้องแก้โค้ดที่อื่น
