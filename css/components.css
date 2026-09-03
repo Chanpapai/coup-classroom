@@ -1,0 +1,231 @@
+/* ============================================================
+   ชิ้นส่วนที่ใช้ซ้ำ: ปุ่ม ช่องกรอก การ์ด กล่องโต้ตอบ
+   ============================================================ */
+
+/* ── ปุ่ม ── */
+.btn {
+  min-height: var(--tap);
+  padding: 12px 20px;
+  border: 0;
+  border-radius: var(--r);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform .12s ease, background .15s ease, opacity .15s ease;
+}
+.btn:active:not(:disabled) { transform: scale(.965); }
+.btn-xl { width: 100%; min-height: 56px; font-size: 18px; }
+
+.btn-primary { background: var(--marker); color: #fff; box-shadow: var(--shadow); }
+.btn-primary:active:not(:disabled) { background: var(--marker-d); }
+
+.btn-outline {
+  background: var(--paper-2);
+  color: var(--marker);
+  box-shadow: inset 0 0 0 2px var(--marker);
+}
+.btn-ghost { background: transparent; color: var(--ink-soft); }
+
+.btn-danger { background: var(--red); color: #fff; }
+.btn-ok     { background: var(--green); color: #fff; }
+.btn-gold   { background: var(--gold); color: #3B2C00; }
+
+.btn:disabled { opacity: .42; cursor: not-allowed; }
+
+.icon-btn {
+  width: var(--tap); height: var(--tap);
+  border: 0; background: transparent;
+  font-size: 20px; line-height: 1;
+  border-radius: 50%;
+  cursor: pointer; color: var(--ink-soft);
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+}
+.icon-btn:active { background: rgba(30,36,48,.06); }
+
+/* ── แถบหัว ── */
+.bar {
+  height: 56px;
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 6px;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule);
+  flex: 0 0 auto;
+}
+.bar-title { flex: 1; text-align: center; font-weight: 600; }
+.bar-slot { width: var(--tap); }
+
+/* ── ช่องกรอก ── */
+.field { display: block; }
+.field-label {
+  display: block; margin-bottom: 6px;
+  font-size: 14px; color: var(--ink-soft); font-weight: 500;
+}
+.input {
+  width: 100%; min-height: 54px;
+  padding: 12px 16px;
+  border: 2px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--paper-2);
+  font-size: 17px;
+}
+.input:focus { border-color: var(--marker); outline: none; }
+.input-code {
+  text-align: center;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  font-weight: 700; font-size: 24px;
+  padding-left: 32px;   /* ชดเชย letter-spacing ให้ดูอยู่กลาง */
+}
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.pad   { padding: 20px 18px; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--ink-faint); font-size: 14px;
+  margin: 2px 0;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--rule);
+}
+
+.hint { margin: 0; font-size: 14px; color: var(--red); text-align: center; }
+
+/* ── การ์ดตัวละคร ── */
+.card {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--r);
+  background: var(--paper-2);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--rule);
+}
+.card-art {
+  flex: 1; min-height: 0;
+  display: grid; place-items: center;
+  overflow: hidden;
+  background: var(--paper);
+}
+/* รูปที่ผู้ใช้อัปโหลดเอง — คงสัดส่วนเดิม ไม่ครอป ไม่วาดทับ */
+.card-art img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.card-art .fallback {
+  font-family: 'Mali', cursive;
+  font-size: clamp(24px, 9vw, 42px);
+  line-height: 1;
+}
+.card-name {
+  padding: 6px 6px 7px;
+  text-align: center;
+  font-size: 13px; font-weight: 600;
+  border-top: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.card-skill {
+  padding: 0 6px 6px;
+  text-align: center;
+  font-size: 11px; color: var(--ink-soft);
+  background: var(--paper-2);
+}
+
+.card-back .card-art {
+  background: repeating-linear-gradient(45deg, #E8EEF7 0 8px, #DEE7F3 8px 16px);
+}
+
+.card.is-lost { filter: grayscale(1); opacity: .5; }
+.card.is-lost::after {
+  content: 'ถูกกำจัด';
+  position: absolute; inset: auto 0 38% 0;
+  text-align: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: var(--red);
+  padding: 3px 0;
+  transform: rotate(-8deg);
+}
+
+.card.selectable { cursor: pointer; }
+.card.selectable:active { transform: scale(.95); }
+.card.selected { box-shadow: 0 0 0 3px var(--marker), var(--shadow); }
+
+@keyframes flip-in {
+  from { transform: rotateY(90deg); opacity: 0; }
+  to   { transform: rotateY(0);     opacity: 1; }
+}
+.card-flip { animation: flip-in .32s ease-out; }
+
+/* ── กล่องโต้ตอบ ── */
+.modal-veil {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(20, 26, 38, .55);
+  display: grid; place-items: end center;
+  padding: 16px;
+  animation: fade .18s ease-out;
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  width: 100%; max-width: 460px;
+  max-height: 84vh;
+  background: var(--paper-2);
+  border-radius: var(--r-lg);
+  padding: 20px 18px calc(18px + var(--safe-b));
+  box-shadow: 0 12px 40px rgba(0,0,0,.28);
+  display: flex; flex-direction: column; gap: 12px;
+  animation: rise .24s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes rise { from { transform: translateY(28px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+.modal-title { font-size: 20px; text-align: center; }
+.modal-text  { margin: 0; text-align: center; color: var(--ink-soft); font-size: 15px; }
+.modal-body  { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+.modal-timer { height: 5px; background: var(--rule); border-radius: 99px; overflow: hidden; }
+.modal-timer span { display: block; height: 100%; background: var(--marker); transition: width .95s linear; }
+
+.choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.choice-grid.three { grid-template-columns: repeat(3, 1fr); }
+.target-list { display: flex; flex-direction: column; gap: 8px; }
+.target-btn {
+  min-height: var(--tap);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border: 2px solid var(--rule); border-radius: var(--r);
+  background: var(--paper-2); cursor: pointer; font-weight: 500;
+}
+.target-btn:active { border-color: var(--marker); }
+.target-btn small { color: var(--ink-soft); font-weight: 400; }
+
+.gold-picker { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.gold-picker b { font-family: 'Mali', cursive; font-size: 40px; min-width: 60px; text-align: center; }
+.gold-picker button { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--rule); background: var(--paper-2); font-size: 24px; }
+
+/* ── แผ่นบันทึก ── */
+.sheet-veil { position: fixed; inset: 0; z-index: 55; background: rgba(20,26,38,.5); display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 70vh; background: var(--paper-2); border-radius: var(--r-lg) var(--r-lg) 0 0; display: flex; flex-direction: column; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 18px; font-weight: 600; border-bottom: 1px solid var(--rule); }
+.log-list { list-style: none; margin: 0; padding: 8px 18px calc(18px + var(--safe-b)); font-size: 14px; }
+.log-list li { padding: 7px 0; border-bottom: 1px dashed var(--rule); color: var(--ink-soft); }
+.log-list li:last-child { border: 0; }
+
+/* ── แจ้งเตือน ── */
+.toast {
+  position: fixed; left: 50%; bottom: calc(96px + var(--safe-b));
+  transform: translateX(-50%);
+  z-index: 80;
+  background: var(--ink); color: #fff;
+  padding: 11px 18px; border-radius: 99px;
+  font-size: 14px; max-width: 88vw; text-align: center;
+  animation: rise .2s ease-out;
+}
+.conn-badge {
+  position: fixed; top: calc(8px + var(--safe-t)); left: 50%;
+  transform: translateX(-50%); z-index: 90;
+  background: var(--red); color: #fff;
+  padding: 7px 16px; border-radius: 99px; font-size: 13px;
+}

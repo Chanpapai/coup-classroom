@@ -1,0 +1,96 @@
+/* ============================================================
+   ฐาน: สี ตัวอักษร และการล็อกหน้าจอ
+   ธีม "สมุดเรียน" — พื้นขาวอมฟ้า เส้นบรรทัดจาง ปากกาน้ำเงิน
+   ============================================================ */
+
+:root {
+  --paper:      #F4F7FA;
+  --paper-2:    #FFFFFF;
+  --rule:       #DCE5F0;
+  --ink:        #1E2430;
+  --ink-soft:   #6E7889;
+  --ink-faint:  #A6AEBC;
+
+  --marker:     #2B62D9;   /* ปากกาน้ำเงิน — สีหลัก */
+  --marker-d:   #1E4CB0;
+  --gold:       #E0A008;   /* ทอง */
+  --gold-soft:  #FDF3D9;
+  --red:        #D24545;   /* ปากกาแดง — อันตราย */
+  --red-soft:   #FCEBEB;
+  --green:      #2C9463;   /* พร้อม / ยังอยู่ */
+  --green-soft: #E6F4EC;
+
+  --r-sm: 8px;
+  --r:    14px;
+  --r-lg: 22px;
+
+  --shadow:    0 1px 2px rgba(30, 36, 48, .06), 0 4px 12px rgba(30, 36, 48, .06);
+  --shadow-up: 0 -2px 14px rgba(30, 36, 48, .07);
+
+  --tap: 48px;                       /* ขนาดปุ่มขั้นต่ำสำหรับนิ้ว */
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* ── ข้อ 4: ล็อกหน้าจอ ทั้งหน้าอยู่ในกรอบเดียว ไม่มีการเลื่อน ── */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  overscroll-behavior: none;
+  touch-action: manipulation;        /* กัน double-tap zoom */
+}
+
+body {
+  font-family: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  /* เส้นบรรทัดสมุดจางๆ เป็นพื้นหลัง */
+  background-image: repeating-linear-gradient(
+    to bottom, transparent 0 31px, var(--rule) 31px 32px
+  );
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  padding-top: var(--safe-t);
+  padding-bottom: var(--safe-b);
+  overflow: hidden;
+}
+
+h1, h2, h3, .title, .countdown-num {
+  font-family: 'Mali', 'IBM Plex Sans Thai', cursive;
+  font-weight: 700;
+  margin: 0;
+}
+
+button, input { font: inherit; color: inherit; }
+
+/* ที่เดียวในเกมที่เลื่อนได้ คือเนื้อหายาวๆ ที่เลื่อนอยู่ในกรอบตัวเอง */
+.tutorial-scroll, .log-list, .lobby-body, .modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+:focus-visible {
+  outline: 3px solid var(--marker);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
