@@ -6,7 +6,7 @@
   "description": "COUP : ห้องเรียน — เกมกระดานหลายคนบนเว็บ",
   "scripts": {
     "test": "node tests/engine.test.mjs",
-    "build": "node build-function.mjs",
+    "package.json": "node build-function.mjs",
     "dev": "python3 -m http.server 5173"
   }
 }
