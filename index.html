@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<!-- ข้อ 4: ล็อกหน้าจอ ห้ามซูม ห้ามเลื่อน รองรับจอบาก -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F5F7FA">
+<meta name="mobile-web-app-capable" content="yes">
+<title>COUP : ห้องเรียน</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mali:wght@600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/screens.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══ หน้าแรก ══ -->
+  <section class="screen" data-screen="home">
+    <div class="home-inner">
+      <div class="chalk-tag">เกมกระดานในห้องเรียน</div>
+      <h1 class="title">COUP<span class="title-sub">ห้องเรียน</span></h1>
+      <p class="tagline">โกหกให้เนียน จับผิดให้ทัน<br>อยู่รอดคนสุดท้ายในห้อง</p>
+      <div class="stack">
+        <button class="btn btn-primary btn-xl" data-go="menu">เริ่มเกม</button>
+        <button class="btn btn-ghost btn-xl" data-go="tutorial">สอนเล่น</button>
+      </div>
+      <div class="home-foot">เล่นได้ 2–6 คน · ใช้มือถือคนละเครื่อง</div>
+    </div>
+  </section>
+
+  <!-- ══ สร้าง / เข้าร่วม ══ -->
+  <section class="screen" data-screen="menu">
+    <header class="bar">
+      <button class="icon-btn" data-go="home" aria-label="กลับ">←</button>
+      <span class="bar-title">เข้าห้อง</span>
+      <span class="bar-slot"></span>
+    </header>
+    <div class="pad stack">
+      <label class="field">
+        <span class="field-label">ชื่อของคุณ</span>
+        <input id="name-input" class="input" maxlength="12" placeholder="เช่น มะลิ" autocomplete="off">
+      </label>
+
+      <button class="btn btn-primary btn-xl" id="btn-create">สร้างห้องใหม่</button>
+
+      <div class="divider"><span>หรือ</span></div>
+
+      <label class="field">
+        <span class="field-label">รหัสห้อง</span>
+        <input id="code-input" class="input input-code" maxlength="6" placeholder="ABC123"
+               autocapitalize="characters" autocomplete="off" spellcheck="false">
+      </label>
+      <button class="btn btn-outline btn-xl" id="btn-join">เข้าร่วมห้อง</button>
+      <p class="hint" id="menu-error" hidden></p>
+    </div>
+  </section>
+
+  <!-- ══ ห้องรอ ══ -->
+  <section class="screen" data-screen="lobby">
+    <header class="bar">
+      <button class="icon-btn" id="btn-leave" aria-label="ออก">←</button>
+      <span class="bar-title">ห้อง <b id="lobby-code">------</b></span>
+      <button class="icon-btn" id="btn-copy" aria-label="คัดลอกรหัส">⧉</button>
+    </header>
+
+    <div class="lobby-body">
+      <p class="lobby-note" id="lobby-note">รอเพื่อนเข้าห้อง แล้วกดพร้อมให้ครบทุกคน</p>
+      <ul class="player-list" id="lobby-list"></ul>
+    </div>
+
+    <!-- ข้อ 1: ไม่มีปุ่มให้ Host เริ่มเอง ทุกคนต้องกดพร้อมครบ -->
+    <div class="lobby-foot">
+      <button class="btn btn-primary btn-xl" id="btn-ready">พร้อม</button>
+    </div>
+
+    <div class="countdown-veil" id="countdown" hidden>
+      <div class="countdown-num" id="countdown-num">10</div>
+      <div class="countdown-label">เกมกำลังจะเริ่ม</div>
+    </div>
+  </section>
+
+  <!-- ══ หน้าเกม ══ -->
+  <section class="screen" data-screen="game">
+    <header class="bar bar-game">
+      <span class="bar-room">ห้อง <b id="game-code">------</b></span>
+      <span class="bar-round">รอบ <b id="game-round">1</b></span>
+      <span class="timer" id="game-timer" hidden><i></i><b>0</b></span>
+      <button class="icon-btn" id="btn-sound" aria-label="เสียง">🔊</button>
+    </header>
+
+    <div class="turn-strip" id="turn-strip">กำลังเริ่ม…</div>
+
+    <!-- ข้อ 2: ไม่มีโต๊ะกลาง พื้นที่ตรงกลางเปิดโล่งให้ผู้เล่นเต็มความกว้าง -->
+    <div class="board" id="board"></div>
+
+    <div class="pile-strip">
+      <span class="pile"><i>กอง</i><b id="pile-deck">0</b></span>
+      <span class="pile"><i>ถูกกำจัด</i><b id="pile-discard">0</b></span>
+      <span class="pile pile-gold"><i>คลังห้อง</i><b id="pile-treasury">0</b></span>
+      <button class="pile pile-log" id="btn-log"><i>บันทึก</i><b>≡</b></button>
+    </div>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <div class="hand-zone">
+      <div class="my-cards" id="my-cards"></div>
+      <div class="my-gold" id="my-gold"><i>ทองของคุณ</i><b>2</b></div>
+    </div>
+
+    <!-- ข้อ 3: ถ้าตายแล้ว ทั้งบล็อกนี้จะถูกแทนด้วยแถบผู้ชม ไม่มีปุ่มอะไรให้กดเลย -->
+    <div class="action-bar" id="action-bar"></div>
+    <div class="spectator-bar" id="spectator-bar" hidden>
+      <span class="spec-dot"></span>คุณถูกไล่ออกจากห้องแล้ว — ดูเกมได้อย่างเดียว
+    </div>
+  </section>
+
+  <!-- ══ จบเกม ══ -->
+  <section class="screen" data-screen="end">
+    <div class="end-inner">
+      <div class="end-emoji">🎉</div>
+      <h2 class="end-title">ชนะแล้ว!</h2>
+      <p class="end-text" id="end-text"></p>
+      <div class="stack">
+        <button class="btn btn-primary btn-xl" id="btn-again">เล่นอีกครั้ง</button>
+        <button class="btn btn-ghost btn-xl" data-go="home" id="btn-end-home">กลับหน้าหลัก</button>
+      </div>
+      <p class="hint" id="end-hint"></p>
+    </div>
+  </section>
+
+  <!-- ══ สอนเล่น ══ -->
+  <section class="screen" data-screen="tutorial">
+    <header class="bar">
+      <button class="icon-btn" data-go="home" aria-label="กลับ">←</button>
+      <span class="bar-title">สอนเล่น</span>
+      <span class="bar-slot"></span>
+    </header>
+    <div class="tutorial-scroll" id="tutorial-body"></div>
+  </section>
+
+</div>
+
+<!-- กล่องโต้ตอบกลางจอ -->
+<div class="modal-veil" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-timer" id="modal-timer" hidden><span></span></div>
+    <h3 class="modal-title" id="modal-title"></h3>
+    <p class="modal-text" id="modal-text"></p>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- แผงบันทึกเหตุการณ์ -->
+<div class="sheet-veil" id="log-sheet" hidden>
+  <div class="sheet">
+    <div class="sheet-head">บันทึกเหตุการณ์<button class="icon-btn" id="btn-log-close">✕</button></div>
+    <ul class="log-list" id="log-list"></ul>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<div class="conn-badge" id="conn" hidden>กำลังเชื่อมต่อใหม่…</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
