@@ -1,5 +1,5 @@
 // ============================================================
-// COUP : ห้องเรียน — Supabase Edge Function  (ไฟล์นี้สร้างอัตโนมัติ)
+// ที่นี่พี่ใหญ่ — Supabase Edge Function (Coup-style)  (ไฟล์นี้สร้างอัตโนมัติ)
 // อย่าแก้ไฟล์นี้ตรงๆ ให้แก้ src/engine.js หรือ src/handler.js
 // แล้วรัน:  node build-function.mjs
 // ============================================================
@@ -7,7 +7,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 /**
- * COUP : ห้องเรียน — Rules engine
+ * ที่นี่พี่ใหญ่ — Rules engine (Coup-style)
  *
  * ตัวนี้คือ "สมองของเกม" ทั้งหมด รันบน Supabase Edge Function เท่านั้น
  * Client ไม่มีสิทธิ์ตัดสินอะไรเอง ส่งได้แค่ "ฉันอยากทำ X" แล้วรอผลกลับ
