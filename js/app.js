@@ -421,7 +421,51 @@ function renderNotice() {
 /**
  * ข้อ 3: ถ้าตายแล้ว ซ่อนแถบ Action ทั้งแถบ แล้วขึ้นแถบผู้ชมแทน
  * ไม่มีปุ่มอะไรให้กดเลย และ .is-spectator ยังกันกล่องโต้ตอบไม่ให้เด้งด้วย
+ *
+ * ปรับตามที่ขอ: เหลือ 3 ปุ่มหลักบนแถบ Action เสมอ
+ *   1) "ใช้ความสามารถการ์ด"  -> เปิดเมนูย่อย: เก็บเงินห้อง/ยืมของ/จั่วการ์ด/ไล่ออก -3
+ *      (Action ที่ต้องอ้างสิทธิ์ว่าเป็นตัวละคร มี Challenge ได้)
+ *   2) "ดำเนินการ/เลือกเป้าหมาย" -> เปิดเมนูย่อย: เบิกเงิน +2 / ไล่ออกทันที -7
+ *      (Action ที่ไม่ต้องอ้างสิทธิ์ตัวละคร)
+ *   3) "จบเทิร์น" -> หยิบเงิน +1 ทันที (ไม่มี Challenge/Block เลย จบเทิร์นตัวเองไว ๆ)
+ * กติกา Coup เดิมไม่เปลี่ยนเลย แค่จัดกลุ่มปุ่มใหม่ให้เหลือ 3 ปุ่มตามที่ขอ
  */
+const ABILITY_ACTION_IDS = ['tax', 'steal', 'exchange', 'assassinate'];
+const BASIC_ACTION_IDS = ['foreign_aid', 'coup'];
+
+function actionReason(id, canAct) {
+  const my = me();
+  if (!canAct) return '';
+  const need = id === 'assassinate' ? 3 : id === 'coup' ? 7 : 0;
+  if (need && my.gold < need) return `ต้องมี ${need} ทอง`;
+  if (id === 'steal' && !app.state.players.some((p) => p.alive && p.id !== uid() && p.gold > 0)) return 'ไม่มีใครมีทอง';
+  return '';
+}
+
+function openActionMenu(title, ids, canAct) {
+  openModal({
+    title,
+    text: 'เลือก Action ที่จะใช้',
+    build: (body, close) => {
+      const list = el('div', 'target-list');
+      for (const id of ids) {
+        const meta = ACTION_LABELS[id];
+        const reason = actionReason(id, canAct);
+        const b = el('button', 'target-btn');
+        b.appendChild(el('span', null, meta.label));
+        b.appendChild(el('small', null, reason || meta.amount || ''));
+        b.disabled = !canAct || !!reason;
+        b.addEventListener('click', () => { close(); onAction(id); });
+        list.appendChild(b);
+      }
+      body.appendChild(list);
+      const cancel = el('button', 'btn btn-ghost', 'ยกเลิก');
+      cancel.addEventListener('click', close);
+      body.appendChild(cancel);
+    },
+  });
+}
+
 function renderActions() {
   const spectating = !amAlive();
   document.body.classList.toggle('is-spectator', spectating);
@@ -430,37 +474,23 @@ function renderActions() {
   if (spectating) { $('#action-bar').innerHTML = ''; return; }
 
   const s = app.state;
-  const my = me();
   const canAct = isMyTurn() && !s.pending;
-
-  const items = [
-    { id: 'income' },
-    { id: 'foreign_aid' },
-    { id: 'tax' },
-    { id: 'steal' },
-    { id: 'exchange' },
-    { id: 'assassinate', need: 3 },
-    { id: 'coup', need: 7, wide: true },
-  ];
 
   const bar = $('#action-bar');
   bar.innerHTML = '';
-  for (const it of items) {
-    const meta = ACTION_LABELS[it.id];
-    const b = el('button', 'act ' + meta.cls + (it.wide ? ' wide' : ''));
-    b.appendChild(el('span', null, meta.label));
 
-    let reason = '';
-    if (!canAct) reason = '';
-    else if (it.need && my.gold < it.need) reason = `ต้องมี ${it.need} ทอง`;
-    else if (it.id === 'steal' && !s.players.some((p) => p.alive && p.id !== uid() && p.gold > 0))
-      reason = 'ไม่มีใครมีทอง';
-
-    b.appendChild(el('em', null, reason || meta.amount || '·'));
-    b.disabled = !canAct || !!reason;
-    b.addEventListener('click', () => onAction(it.id));
+  function mainButton(label, cls, hint, onClick) {
+    const b = el('button', 'act ' + cls);
+    b.appendChild(el('span', null, label));
+    b.appendChild(el('em', null, hint || '·'));
+    b.disabled = !canAct;
+    b.addEventListener('click', onClick);
     bar.appendChild(b);
   }
+
+  mainButton('ใช้ความสามารถการ์ด', 'gold', '', () => openActionMenu('ใช้ความสามารถการ์ด', ABILITY_ACTION_IDS, canAct));
+  mainButton('ดำเนินการ / เลือกเป้าหมาย', 'danger', '', () => openActionMenu('ดำเนินการ', BASIC_ACTION_IDS, canAct));
+  mainButton('จบเทิร์น', '', '+1 ทอง', () => onAction('income'));
 }
 
 function renderLog() {
