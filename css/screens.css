@@ -1,6 +1,5 @@
 /* ============================================================
-   เลย์เอาต์ของแต่ละหน้าจอ
-   ทุกหน้าสูง 100% พอดี ไม่มีการเลื่อนหน้าหลัก
+   เลย์เอาต์ของแต่ละหน้าจอ — ธีม "ที่นี่พี่ใหญ่" 3D Board Game
    ============================================================ */
 
 .screen {
@@ -12,34 +11,44 @@
 }
 .screen.active { display: flex; }
 
-/* ── หน้าแรก ── */
+/* ── หน้าแรก: Main Menu สไตล์เกมกระดาน ── */
 .home-inner {
   flex: 1;
   display: flex; flex-direction: column; justify-content: center;
   gap: 22px; padding: 24px 22px;
   text-align: center;
+  background:
+    radial-gradient(70% 50% at 50% 18%, rgba(61,123,255,.18), transparent 60%),
+    radial-gradient(60% 40% at 50% 100%, rgba(242,176,19,.10), transparent 60%);
 }
 .chalk-tag {
   align-self: center;
   font-size: 13px; letter-spacing: .04em;
   color: var(--ink-soft);
-  background: var(--paper-2);
-  border: 1px dashed var(--rule);
-  padding: 5px 14px; border-radius: 99px;
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 6px 16px; border-radius: 99px;
+  box-shadow: var(--bevel-top), 0 4px 10px rgba(0,0,0,.3);
 }
 .title {
-  font-size: clamp(46px, 16vw, 78px);
-  line-height: .92;
-  color: var(--marker);
+  font-size: clamp(48px, 17vw, 82px);
+  line-height: .95;
+  color: var(--gold);
   letter-spacing: -.01em;
+  text-shadow:
+    0 1px 0 var(--gold-l),
+    0 4px 0 var(--gold-d),
+    0 8px 0 rgba(0,0,0,.35),
+    0 18px 26px rgba(0,0,0,.55);
 }
 .title-sub {
   display: block;
-  font-size: .42em;
+  font-size: .5em;
   color: var(--ink);
-  margin-top: 6px;
+  margin-top: 8px;
+  text-shadow: 0 3px 0 rgba(0,0,0,.4), 0 8px 16px rgba(0,0,0,.5);
 }
-.tagline { margin: 0; color: var(--ink-soft); font-size: 16px; }
+.tagline { margin: 0; color: var(--ink-soft); font-size: 17px; font-weight: 600; }
 .home-foot { font-size: 13px; color: var(--ink-faint); }
 
 /* ── ห้องรอ ── */
@@ -49,23 +58,25 @@
 .player-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .player-row {
   display: flex; align-items: center; gap: 12px;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  border: 1px solid rgba(255,255,255,.06);
   border-radius: var(--r);
   padding: 12px 14px;
   min-height: 62px;
+  box-shadow: var(--bevel-top), 0 4px 12px rgba(0,0,0,.3);
 }
 .player-row .avatar {
   width: 38px; height: 38px; border-radius: 50%;
   display: grid; place-items: center;
   background: var(--paper); font-size: 19px;
   flex: 0 0 auto;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.4);
 }
 .player-row .who { flex: 1; min-width: 0; }
-.player-row .who b { display: block; font-weight: 600; }
+.player-row .who b { display: block; font-weight: 700; }
 .player-row .who small { color: var(--ink-faint); font-size: 12px; }
-.player-row .state { font-size: 13px; font-weight: 600; color: var(--ink-faint); white-space: nowrap; }
-.player-row.is-ready { border-color: var(--green); background: var(--green-soft); }
+.player-row .state { font-size: 13px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
+.player-row.is-ready { box-shadow: var(--bevel-top), 0 0 0 2px var(--green), 0 4px 12px rgba(0,0,0,.3); }
 .player-row.is-ready .state { color: var(--green); }
 .player-row .kick { color: var(--red); font-size: 17px; }
 
@@ -78,21 +89,19 @@
 
 .countdown-veil {
   position: absolute; inset: 0; z-index: 40;
-  background: rgba(43, 98, 217, .95);
+  background: radial-gradient(120% 100% at 50% 50%, rgba(61,123,255,.96), rgba(15,25,50,.98));
   color: #fff;
   display: grid; place-content: center; justify-items: center; gap: 6px;
 }
 .countdown-num {
   font-size: 34vw; line-height: 1;
+  text-shadow: 0 10px 30px rgba(0,0,0,.5);
   animation: pop .9s ease-out infinite;
 }
 @keyframes pop { 0% { transform: scale(1.18); opacity: .5; } 40%, 100% { transform: scale(1); opacity: 1; } }
 .countdown-label { font-size: 17px; opacity: .9; }
 
-/* ══════════ หน้าเกม ══════════
-   ข้อ 2: ไม่มีโต๊ะกลาง — .board กินพื้นที่ที่เหลือทั้งหมดเต็มความกว้าง
-   ข้อ 4: ทุกแถวมีความสูงคงที่ ยกเว้น .board ที่ยืดหด ทำให้ไม่มีวันล้นจอ
-*/
+/* ══════════ หน้าเกม ══════════ */
 [data-screen="game"] {
   display: none;
   grid-template-rows: auto auto 1fr auto auto auto;
@@ -102,102 +111,210 @@
 
 .bar-game { gap: 10px; padding: 0 8px 0 14px; }
 .bar-room, .bar-round { font-size: 13px; color: var(--ink-soft); }
-.bar-room b, .bar-round b { color: var(--ink); letter-spacing: .06em; }
+.bar-room b, .bar-round b { color: var(--gold); letter-spacing: .06em; }
 .bar-round { margin-left: auto; }
 
 .timer {
   display: inline-flex; align-items: center; gap: 5px;
-  background: var(--gold-soft); color: #7A5A00;
+  background: linear-gradient(180deg, var(--gold-l), var(--gold));
+  color: #4a3300;
   padding: 4px 11px; border-radius: 99px;
   font-size: 13px; font-weight: 700;
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 3px 8px rgba(0,0,0,.35);
 }
-.timer i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: blink 1s infinite; }
+.timer i { width: 7px; height: 7px; border-radius: 50%; background: #4a3300; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .25; } }
 
+/* ── แถบตาผู้เล่น: ชื่อตาปัจจุบัน + ลำดับวงกลม ── */
 .turn-strip {
-  padding: 9px 14px;
+  padding: 8px 10px;
   text-align: center;
-  font-size: 14px; font-weight: 600;
-  background: var(--paper-2);
-  border-bottom: 1px solid var(--rule);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  border-bottom: 1px solid rgba(0,0,0,.35);
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative; z-index: 2;
 }
-.turn-strip.is-me { background: var(--marker); color: #fff; }
+.turn-strip.is-me { background: linear-gradient(180deg, var(--marker-l), var(--marker)); }
+.turn-strip.is-me .turn-main b,
+.turn-strip.is-me .seq-chip b { color: #fff; }
 
-/* กระดานผู้เล่น — โล่ง เต็มความกว้าง ไม่มีโต๊ะ */
-/* ข้อ: เพิ่มมุมมอง 3D เบา ๆ ให้ที่นั่งผู้เล่นดูเหมือนวางอยู่บนโต๊ะจริง (ไม่กระทบ layout เดิม) */
-.board {
-  min-height: 0;
-  padding: 10px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 8px;
-  align-content: stretch;
-  perspective: 1100px;
+.turn-main {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 700;
 }
-.board.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.turn-dot-live {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(242,176,19,.25);
+  animation: turn-glow 1.4s ease-in-out infinite;
+  flex: 0 0 auto;
+}
+@keyframes turn-glow { 50% { box-shadow: 0 0 0 8px rgba(242,176,19,.08); } }
+
+.turn-seq {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; overflow-x: auto; padding: 2px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.seq-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--ink-faint); white-space: nowrap;
+  flex: 0 0 auto;
+}
+.seq-chip i { font-style: normal; font-size: 9px; }
+.seq-chip b { font-weight: 600; color: var(--ink-soft); }
+.seq-chip.seq-now i { color: var(--gold); }
+.seq-chip.seq-now b { color: var(--ink); font-weight: 700; }
+.seq-arrow { color: var(--ink-faint); font-size: 10px; flex: 0 0 auto; }
+
+/* ── กระดานวงกลม: ผู้เล่นล้อมโต๊ะสักหลาด ── */
+.board {
+  position: relative;
+  min-height: 270px;
+  margin: 8px;
+  border-radius: 50% / 32%;
+  background:
+    radial-gradient(60% 60% at 50% 50%, var(--felt), var(--felt-2) 78%);
+  box-shadow:
+    inset 0 0 0 10px var(--wood),
+    inset 0 0 0 14px var(--wood-2),
+    inset 0 20px 50px rgba(0,0,0,.55),
+    0 14px 30px rgba(0,0,0,.5);
+}
+.board-center {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--ink-soft);
+  text-align: center;
+  pointer-events: none;
+  width: min(60%, 220px);
+}
+.board-center .bc-turn {
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 700; color: var(--gold-l);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+.board-center .bc-sub {
+  font-size: clamp(9px, 2.4vw, 11px);
+  color: rgba(255,255,255,.55);
+}
 
 .seat {
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(80px, 24vw, 128px);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: var(--r);
-  padding: 8px 9px;
-  display: flex; flex-direction: column; justify-content: center; gap: 4px;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-  transform: rotateX(3deg);
-  box-shadow: 0 6px 12px rgba(20,26,38,.10), 0 1px 0 rgba(255,255,255,.6) inset;
-  transition: transform .15s ease, box-shadow .15s ease;
+  padding: 7px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  box-shadow: var(--bevel-top), 0 6px 0 rgba(0,0,0,.3), 0 10px 16px rgba(0,0,0,.4);
+  transition: box-shadow .2s ease, transform .2s ease;
 }
 .seat-name {
-  font-weight: 600; font-size: 14px;
+  font-weight: 700; font-size: 12.5px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
 }
-.seat-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
-.seat-gold { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.seat-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.seat-gold {
+  color: #4a3300; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, var(--gold-l), var(--gold));
+  padding: 1px 7px; border-radius: 99px;
+  box-shadow: 0 2px 3px rgba(0,0,0,.3);
+}
 .seat-cards { display: flex; gap: 3px; }
 .seat-cards i {
-  width: 13px; height: 18px; border-radius: 3px;
-  background: repeating-linear-gradient(45deg, #E3EBF6 0 4px, #D6E1F0 4px 8px);
-  border: 1px solid var(--rule);
+  width: 12px; height: 17px; border-radius: 3px;
+  background: repeating-linear-gradient(45deg, #1d3a63 0 4px, #16294a 4px 8px);
+  border: 1px solid rgba(255,255,255,.15);
+  box-shadow: 0 2px 3px rgba(0,0,0,.35);
 }
-.seat-cards i.lost { background: var(--red-soft); border-color: var(--red); }
+.seat-cards i.lost { background: var(--red-soft); border-color: var(--red); opacity: .6; }
+.seat-lost {
+  font-size: 10px; color: var(--ink-faint);
+  text-align: center; line-height: 1.25;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
 
-.seat.is-turn { border-color: var(--marker); box-shadow: 0 0 0 2px rgba(43,98,217,.18), 0 8px 16px rgba(43,98,217,.18); transform: rotateX(3deg) translateY(-2px); }
-.seat.is-me   { background: #F7FAFF; }
-.seat.is-dead { opacity: .45; }
+.seat.is-turn {
+  box-shadow: var(--bevel-top), 0 0 0 2px var(--gold), 0 6px 0 rgba(0,0,0,.3), 0 0 18px rgba(242,176,19,.45);
+  transform: translate(-50%, -50%) scale(1.06);
+  z-index: 3;
+}
+.seat.is-me   { box-shadow: var(--bevel-top), 0 0 0 2px var(--marker-l), 0 6px 0 rgba(0,0,0,.3), 0 10px 16px rgba(0,0,0,.4); }
+.seat.is-dead { opacity: .4; filter: grayscale(.6); }
 .seat.is-dead .seat-name { text-decoration: line-through; }
 .seat-tag {
-  position: absolute; top: 6px; right: 6px;
-  font-size: 10px; font-weight: 700;
-  padding: 2px 6px; border-radius: 99px;
-  background: var(--marker); color: #fff;
+  position: absolute; top: -8px; right: -6px;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 7px; border-radius: 99px;
+  background: linear-gradient(180deg, var(--gold-l), var(--gold)); color: #4a3300;
+  box-shadow: 0 3px 6px rgba(0,0,0,.4);
 }
-.seat-tag.dead { background: var(--red); }
+.seat-tag.dead { background: linear-gradient(180deg, #ff7a7a, var(--red)); color: #fff; }
 
-@keyframes gold-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes seat-flash-lost {
+  0%, 100% { box-shadow: var(--bevel-top), 0 6px 0 rgba(0,0,0,.3), 0 10px 16px rgba(0,0,0,.4); }
+  30% { box-shadow: var(--bevel-top), 0 0 0 3px var(--red), 0 6px 0 rgba(0,0,0,.3), 0 0 22px rgba(239,68,68,.6); }
+}
+.seat.seat-flash-lost { animation: seat-flash-lost .7s ease-out; }
+
+/* ตำแหน่งรอบวง: ตำแหน่ง 0 (ตัวเอง) อยู่ล่างสุดเสมอ */
+.board[data-count="2"] .seat[data-pos="0"] { left: 50%; top: 84%; }
+.board[data-count="2"] .seat[data-pos="1"] { left: 50%; top: 16%; }
+
+.board[data-count="3"] .seat[data-pos="0"] { left: 50%; top: 84%; }
+.board[data-count="3"] .seat[data-pos="1"] { left: 15%; top: 32%; }
+.board[data-count="3"] .seat[data-pos="2"] { left: 85%; top: 32%; }
+
+.board[data-count="4"] .seat[data-pos="0"] { left: 50%; top: 85%; }
+.board[data-count="4"] .seat[data-pos="1"] { left: 14%; top: 50%; }
+.board[data-count="4"] .seat[data-pos="2"] { left: 50%; top: 16%; }
+.board[data-count="4"] .seat[data-pos="3"] { left: 86%; top: 50%; }
+
+.board[data-count="5"] .seat[data-pos="0"] { left: 50%; top: 85%; }
+.board[data-count="5"] .seat[data-pos="1"] { left: 16%; top: 66%; }
+.board[data-count="5"] .seat[data-pos="2"] { left: 22%; top: 21%; }
+.board[data-count="5"] .seat[data-pos="3"] { left: 78%; top: 21%; }
+.board[data-count="5"] .seat[data-pos="4"] { left: 84%; top: 66%; }
+
+.board[data-count="6"] .seat[data-pos="0"] { left: 50%; top: 85%; }
+.board[data-count="6"] .seat[data-pos="1"] { left: 14%; top: 72%; }
+.board[data-count="6"] .seat[data-pos="2"] { left: 15%; top: 25%; }
+.board[data-count="6"] .seat[data-pos="3"] { left: 50%; top: 15%; }
+.board[data-count="6"] .seat[data-pos="4"] { left: 85%; top: 25%; }
+.board[data-count="6"] .seat[data-pos="5"] { left: 86%; top: 72%; }
+
+@keyframes gold-up { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -30px); opacity: 0; } }
 .gold-pop {
-  position: absolute; right: 8px; top: 50%;
+  position: absolute; left: 50%; top: -6px;
   font-weight: 700; color: var(--gold); font-size: 14px;
+  text-shadow: 0 2px 4px rgba(0,0,0,.6);
   animation: gold-up .9s ease-out forwards;
   pointer-events: none;
+  z-index: 4;
 }
 
 /* แถบกอง */
 .pile-strip {
   display: flex; gap: 6px; padding: 6px 10px;
-  border-top: 1px solid var(--rule);
-  background: var(--paper-2);
+  border-top: 1px solid rgba(0,0,0,.35);
+  background: linear-gradient(180deg, var(--paper-2), var(--paper-3));
 }
 .pile {
   flex: 1;
   display: flex; flex-direction: column; align-items: center;
-  padding: 5px 2px;
+  padding: 6px 2px;
   border-radius: var(--r-sm);
   background: var(--paper);
   border: 0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.4);
 }
 .pile i { font-style: normal; font-size: 10px; color: var(--ink-faint); }
 .pile b { font-size: 15px; font-variant-numeric: tabular-nums; }
@@ -208,101 +325,115 @@
 .notice {
   padding: 9px 14px;
   text-align: center;
-  font-size: 14px; font-weight: 600;
-  background: var(--gold-soft);
-  border-top: 1px solid var(--rule);
-  color: #7A5A00;
+  font-size: 14px; font-weight: 700;
+  background: linear-gradient(180deg, var(--gold-l), var(--gold-soft));
+  border-top: 1px solid rgba(0,0,0,.35);
+  color: #4a3300;
 }
-.notice.alert { background: var(--red-soft); color: #932A2A; }
+.notice.alert { background: linear-gradient(180deg, #ff9a9a, var(--red-soft)); color: #ffe2e2; }
 
 /* การ์ดของตัวเอง */
 .hand-zone {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px;
-  background: var(--paper-2);
-  border-top: 1px solid var(--rule);
+  background: linear-gradient(180deg, var(--paper-2), var(--paper-3));
+  border-top: 1px solid rgba(0,0,0,.35);
 }
-.my-cards { display: flex; gap: 10px; flex: 1; min-width: 0; perspective: 700px; }
+.my-cards { display: flex; gap: 10px; flex: 1; min-width: 0; }
 .my-cards .card { width: 74px; flex: 0 0 auto; }
-.my-cards .card:nth-child(odd) { transform: rotate(-2deg); }
-.my-cards .card:nth-child(even) { transform: rotate(2deg); }
 .my-gold {
   margin-left: auto; text-align: center;
-  background: var(--gold-soft); border-radius: var(--r);
+  background: linear-gradient(180deg, var(--gold-l), var(--gold));
+  border-radius: var(--r);
   padding: 8px 14px; min-width: 84px;
+  box-shadow: var(--bevel-top), 0 5px 0 rgba(0,0,0,.3), 0 8px 14px rgba(0,0,0,.35);
 }
-.my-gold i { display: block; font-style: normal; font-size: 11px; color: #7A5A00; }
-.my-gold b { font-family: 'Mali', cursive; font-size: 28px; color: var(--gold); line-height: 1.1; }
+.my-gold i { display: block; font-style: normal; font-size: 11px; color: #4a3300; }
+.my-gold b { font-family: 'Mali', cursive; font-size: 28px; color: #4a3300; line-height: 1.1; }
 
-/* แถบ Action — ปรับเหลือ 3 ปุ่มหลักตามที่ขอ (คงสไตล์เดิมของปุ่ม แค่จำนวนลดลง) */
+/* ── แถบ Action: เหลือ 3 ปุ่มหลัก 3D ── */
 .action-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding: 8px 10px calc(10px + var(--safe-b));
-  background: var(--paper-2);
-  border-top: 1px solid var(--rule);
+  padding: 10px 12px calc(12px + var(--safe-b));
+  background: linear-gradient(180deg, var(--paper-2), var(--paper-3));
+  border-top: 1px solid rgba(0,0,0,.35);
   box-shadow: var(--shadow-up);
 }
 .act {
-  min-height: 56px;
-  border: 1px solid var(--rule);
-  border-radius: var(--r-sm);
-  background: var(--paper);
+  min-height: 68px;
+  border: 0;
+  border-radius: var(--r);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; padding: 6px 4px;
-  font-size: 12.5px; font-weight: 600; line-height: 1.2;
+  gap: 2px; padding: 8px 4px;
+  font-size: 12.5px; font-weight: 700; line-height: 1.2;
   text-align: center; cursor: pointer;
-  /* ข้อ: ปุ่มยกตัวแบบ 3D เบา ๆ ให้ความรู้สึกเหมือนกดปุ่มจริง */
-  box-shadow: 0 3px 0 rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.08);
-  transform: translateY(0);
-  transition: transform .08s ease, box-shadow .08s ease, background .15s ease;
+  color: var(--ink);
+  box-shadow: var(--bevel-top), 0 5px 0 rgba(0,0,0,.32), 0 9px 16px rgba(0,0,0,.35);
+  transition: transform .1s ease, box-shadow .1s ease;
 }
-.act em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--marker); }
-.act.gold em { color: var(--gold); }
-.act.danger em { color: var(--red); }
-.act:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.08); background: #EDF2FB; }
-.act:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
-.act.wide { grid-column: span 2; }
+.act .act-glyph { font-size: 22px; line-height: 1; }
+.act em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.act.gold { background: linear-gradient(180deg, var(--gold-l), var(--gold)); color: #4a3300; }
+.act.gold em { color: #6a4d00; }
+.act.ability { background: linear-gradient(180deg, #7aa4ff, var(--marker)); color: #fff; }
+.act.ability em { color: rgba(255,255,255,.85); }
+.act.danger { background: linear-gradient(180deg, #ff8a8a, var(--red)); color: #fff; }
+.act.danger em { color: rgba(255,255,255,.85); }
+.act:active:not(:disabled) { transform: translateY(3px); box-shadow: var(--bevel-top), 0 2px 0 rgba(0,0,0,.32), 0 4px 8px rgba(0,0,0,.35); }
+.act:disabled { opacity: .38; cursor: not-allowed; }
 
-/* ── ข้อ 3: โหมดผู้ชม ── */
+/* ── โหมดผู้ชม ── */
 .spectator-bar {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 16px 14px calc(16px + var(--safe-b));
-  background: var(--red-soft);
+  background: linear-gradient(180deg, var(--red-soft), #200a0a);
   border-top: 1px solid var(--red);
-  color: #932A2A;
-  font-weight: 600; font-size: 14px;
+  color: #ffb3b3;
+  font-weight: 700; font-size: 14px;
   text-align: center;
 }
 .spec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); flex: 0 0 auto; }
 
-/* คนตายแล้ว: ไม่มีปุ่มไหนกดได้ทั้งจอ กันพลาดอีกชั้นนอกเหนือจากฝั่งเซิร์ฟเวอร์ */
 .is-spectator .action-bar,
 .is-spectator .modal-veil { display: none !important; }
 .is-spectator .my-cards .card { filter: grayscale(.7); }
 
-/* ── จบเกม ── */
+/* ── จบเกม: เวทีแชมป์ 3D ── */
 .end-inner {
   flex: 1; display: flex; flex-direction: column; justify-content: center;
   align-items: center; gap: 14px; padding: 26px 22px; text-align: center;
+  background: radial-gradient(70% 50% at 50% 30%, rgba(242,176,19,.16), transparent 60%);
 }
-.end-emoji { font-size: 62px; animation: pop 1.2s ease-out; }
-.end-title { font-size: 34px; color: var(--marker); }
-.end-text { margin: 0; color: var(--ink-soft); font-size: 17px; }
+.end-emoji {
+  font-size: 68px;
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,.5));
+  animation: pop 1.2s ease-out;
+}
+.end-title { font-size: 22px; color: var(--ink-soft); font-weight: 700; }
+.end-winner-name {
+  display: block; margin-top: 4px;
+  font-size: 40px; color: var(--gold);
+  text-shadow: 0 1px 0 var(--gold-l), 0 4px 0 var(--gold-d), 0 10px 18px rgba(0,0,0,.5);
+}
+.end-text { margin: 0; color: var(--ink-soft); font-size: 17px; font-weight: 700; }
 .end-inner .stack { width: 100%; max-width: 340px; margin-top: 10px; }
 
 /* ── สอนเล่น ── */
 .tutorial-scroll { flex: 1; min-height: 0; padding: 18px 18px calc(28px + var(--safe-b)); }
 .tut-sec { margin-bottom: 22px; }
-.tut-sec h3 { font-size: 19px; color: var(--marker); margin-bottom: 6px; }
+.tut-sec h3 { font-size: 19px; color: var(--gold); margin-bottom: 6px; }
 .tut-sec p  { margin: 0 0 8px; color: var(--ink-soft); font-size: 15px; }
 .tut-sec ul { margin: 0; padding-left: 20px; color: var(--ink-soft); font-size: 15px; }
 .tut-sec li { margin-bottom: 4px; }
 .tut-char {
   display: flex; gap: 12px; align-items: flex-start;
-  background: var(--paper-2); border: 1px solid var(--rule);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  border: 1px solid rgba(255,255,255,.06);
   border-radius: var(--r); padding: 12px; margin-bottom: 8px;
+  box-shadow: var(--bevel-top), 0 4px 10px rgba(0,0,0,.3);
 }
 .tut-char .glyph { font-size: 30px; line-height: 1; }
 .tut-char b { display: block; }
@@ -310,10 +441,9 @@
 
 /* ── จอกว้าง / แนวนอน ── */
 @media (min-width: 620px) {
-  .board { grid-template-columns: repeat(3, 1fr); padding: 14px; gap: 12px; }
-  .action-bar { grid-template-columns: repeat(3, 1fr); max-width: 900px; margin: 0 auto; width: 100%; }
-  .act.wide { grid-column: span 1; }
-  .my-cards .card { width: 88px; }
+  .board { min-height: 340px; max-width: 720px; margin-inline: auto; width: 100%; }
+  .action-bar { max-width: 720px; margin: 0 auto; width: 100%; }
+  .my-cards .card { width: 92px; }
   .screen[data-screen="menu"] .pad,
   .lobby-body, .lobby-foot { max-width: 560px; margin-inline: auto; width: 100%; }
 }
@@ -321,15 +451,17 @@
 /* มือถือแนวนอน: จอเตี้ยมาก ต้องบีบทุกอย่างให้ยังพอดี */
 @media (orientation: landscape) and (max-height: 480px) {
   .bar, .bar-game { height: 44px; }
-  .turn-strip { padding: 5px 10px; font-size: 13px; }
-  .board { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px; }
-  .seat { padding: 5px 7px; }
+  .turn-strip { padding: 4px 8px; }
+  .turn-main { font-size: 12px; }
+  .board { min-height: 160px; margin: 4px; }
+  .seat { width: clamp(64px, 18vw, 96px); padding: 4px 6px; }
   .pile-strip { padding: 3px 8px; }
   .pile b { font-size: 13px; }
   .hand-zone { padding: 5px 10px; }
   .my-cards .card { width: 50px; }
   .my-gold { padding: 4px 10px; min-width: 68px; }
   .my-gold b { font-size: 20px; }
-  .act { min-height: 42px; font-size: 10.5px; }
+  .act { min-height: 46px; font-size: 10.5px; }
+  .act .act-glyph { font-size: 16px; }
   .countdown-num { font-size: 22vh; }
 }
