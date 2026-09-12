@@ -11,6 +11,23 @@ import * as sfx from './sound.js';
 
 const LS_ROOM = 'coup-classroom-room';
 
+// ปุ่มที่ 2 "ใช้ความสามารถ" — รวม Action ที่ต้องอ้างสิทธิ์เป็นตัวละคร (บลัฟได้)
+// บวกกับ "เบิกเงิน" ที่ไม่ต้องอ้างการ์ดใด ๆ (ทุกคนใช้ได้เสมอ)
+const ABILITY_IDS = ['foreign_aid', 'tax', 'steal', 'exchange', 'assassinate'];
+const ABILITY_META = {
+  foreign_aid: { glyph: '💴', card: null,         cost: 0, needTarget: false },
+  tax:         { glyph: '📋', card: 'duke',       cost: 0, needTarget: false },
+  steal:       { glyph: '🎒', card: 'captain',    cost: 0, needTarget: true  },
+  exchange:    { glyph: '📚', card: 'ambassador', cost: 0, needTarget: false },
+  assassinate: { glyph: '✏️', card: 'assassin',   cost: 3, needTarget: true  },
+};
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
 const app = {
   screen: 'home',
   code: null,
@@ -19,6 +36,7 @@ const app = {
   hand: [],        // การ์ดของเราเอง — คนอื่นไม่มีวันได้รับก้อนนี้
   unsub: null,
   prevGold: {},
+  prevLostCount: {},
   prevPendingKey: '',
   busy: false,
 };
@@ -286,6 +304,7 @@ function render() {
   if (!s) return;
 
   if (s.phase !== 'ended') app.prevPendingKey = '';
+  if (s.phase !== 'playing' && modalOpen) closeModal();
   if (s.phase === 'lobby' || s.phase === 'countdown') {
     document.body.classList.remove('is-spectator');
     renderLobby(); go('lobby');
@@ -342,27 +361,43 @@ function renderGame() {
   $('#game-code').textContent = s.code;
   $('#game-round').textContent = s.round;
 
-  const cur = s.players[s.turnSeat];
-  const strip = $('#turn-strip');
-  strip.classList.toggle('is-me', isMyTurn() && amAlive());
-  strip.textContent = !amAlive()
-    ? `กำลังดูเกม — ตาของ ${cur?.name || '-'}`
-    : (isMyTurn() ? 'ตาของคุณ — เลือก Action' : `กำลังรอ ${cur?.name || '-'} เล่น…`);
+  renderTurnStrip();
 
-  // กระดาน
+  // กระดานวงกลม — ตัวเราเองอยู่ตำแหน่งล่างสุดเสมอ ที่เหลือเรียงตามเดิมรอบวง
   const board = $('#board');
-  board.classList.toggle('cols-3', s.players.length > 4);
+  const myIdx = s.players.findIndex((p) => p.id === uid());
+  const ordered = myIdx >= 0
+    ? [...s.players.slice(myIdx), ...s.players.slice(0, myIdx)]
+    : s.players.slice();
+
+  board.dataset.count = String(s.players.length);
   board.innerHTML = '';
-  for (const p of s.players) {
+
+  const center = el('div', 'board-center');
+  const cur = s.players[s.turnSeat];
+  center.appendChild(el('div', 'bc-turn', cur ? `ตาของ ${cur.name}` : ''));
+  center.appendChild(el('div', 'bc-sub', `🂠 ${s.deckCount} · 🪙 ${s.treasury}`));
+  board.appendChild(center);
+
+  ordered.forEach((p, i) => {
     const node = seatEl(p, { isTurn: p.seat === s.turnSeat, isMe: p.id === uid() });
+    node.dataset.pos = String(i);
     board.appendChild(node);
-    const before = app.prevGold[p.id];
-    if (before != null && before !== p.gold) {
-      popGold(node, p.gold - before);
-      if (p.gold > before) sfx.play('gold');
+
+    const beforeGold = app.prevGold[p.id];
+    if (beforeGold != null && beforeGold !== p.gold) {
+      popGold(node, p.gold - beforeGold);
+      if (p.gold > beforeGold) sfx.play('gold');
     }
     app.prevGold[p.id] = p.gold;
-  }
+
+    const beforeLost = app.prevLostCount[p.id];
+    if (beforeLost != null && p.lost.length > beforeLost) {
+      node.classList.add('seat-flash-lost');
+      setTimeout(() => node.classList.remove('seat-flash-lost'), 700);
+    }
+    app.prevLostCount[p.id] = p.lost.length;
+  });
 
   $('#pile-deck').textContent = s.deckCount;
   $('#pile-discard').textContent = s.players.reduce((a, p) => a + p.lost.length, 0);
@@ -378,6 +413,37 @@ function renderGame() {
   renderNotice();
   renderActions();
   renderModal();
+}
+
+/** แถบบนสุดของหน้าเกม: ชื่อตาปัจจุบัน + ลำดับวงกลม ◉ ปัจจุบัน → ○ ถัดไป → ... */
+function renderTurnStrip() {
+  const s = app.state;
+  const cur = s.players[s.turnSeat];
+  const strip = $('#turn-strip');
+  strip.classList.toggle('is-me', isMyTurn() && amAlive());
+  strip.innerHTML = '';
+
+  const main = el('div', 'turn-main');
+  main.appendChild(el('span', 'turn-dot-live'));
+  main.appendChild(el('b', null, !amAlive()
+    ? `กำลังดูเกม — ตาของ ${cur?.name || '-'}`
+    : (isMyTurn() ? 'ตาของคุณ — เลือก Action' : `ตาของ: ${cur?.name || '-'}`)));
+  strip.appendChild(main);
+
+  const alive = s.players.filter((p) => p.alive);
+  if (alive.length) {
+    const startIdx = Math.max(0, alive.findIndex((p) => p.seat === s.turnSeat));
+    const seq = el('div', 'turn-seq');
+    alive.forEach((_, i) => {
+      const p = alive[(startIdx + i) % alive.length];
+      const chip = el('span', 'seq-chip' + (i === 0 ? ' seq-now' : ''));
+      chip.appendChild(el('i', null, i === 0 ? '◉' : '○'));
+      chip.appendChild(el('b', null, p.name));
+      seq.appendChild(chip);
+      if (i < alive.length - 1) seq.appendChild(el('span', 'seq-arrow', '→'));
+    });
+    strip.appendChild(seq);
+  }
 }
 
 function renderNotice() {
@@ -422,50 +488,11 @@ function renderNotice() {
  * ข้อ 3: ถ้าตายแล้ว ซ่อนแถบ Action ทั้งแถบ แล้วขึ้นแถบผู้ชมแทน
  * ไม่มีปุ่มอะไรให้กดเลย และ .is-spectator ยังกันกล่องโต้ตอบไม่ให้เด้งด้วย
  *
- * ปรับตามที่ขอ: เหลือ 3 ปุ่มหลักบนแถบ Action เสมอ
- *   1) "ใช้ความสามารถการ์ด"  -> เปิดเมนูย่อย: เก็บเงินห้อง/ยืมของ/จั่วการ์ด/ไล่ออก -3
- *      (Action ที่ต้องอ้างสิทธิ์ว่าเป็นตัวละคร มี Challenge ได้)
- *   2) "ดำเนินการ/เลือกเป้าหมาย" -> เปิดเมนูย่อย: เบิกเงิน +2 / ไล่ออกทันที -7
- *      (Action ที่ไม่ต้องอ้างสิทธิ์ตัวละคร)
- *   3) "จบเทิร์น" -> หยิบเงิน +1 ทันที (ไม่มี Challenge/Block เลย จบเทิร์นตัวเองไว ๆ)
- * กติกา Coup เดิมไม่เปลี่ยนเลย แค่จัดกลุ่มปุ่มใหม่ให้เหลือ 3 ปุ่มตามที่ขอ
+ * ข้อ 4: เหลือปุ่มหลักแค่ 3 ปุ่ม
+ *  1) เก็บเงิน      → income ทันที +1
+ *  2) ใช้ความสามารถ → เปิดเมนูเลือก (เบิกเงิน/เก็บเงินห้อง/ยืมของ/จั่วการ์ด/ไล่ออก)
+ *  3) โจมตี         → ไล่ออกทันที (coup) เป้าหมายเสียการ์ดแน่นอน
  */
-const ABILITY_ACTION_IDS = ['tax', 'steal', 'exchange', 'assassinate'];
-const BASIC_ACTION_IDS = ['foreign_aid', 'coup'];
-
-function actionReason(id, canAct) {
-  const my = me();
-  if (!canAct) return '';
-  const need = id === 'assassinate' ? 3 : id === 'coup' ? 7 : 0;
-  if (need && my.gold < need) return `ต้องมี ${need} ทอง`;
-  if (id === 'steal' && !app.state.players.some((p) => p.alive && p.id !== uid() && p.gold > 0)) return 'ไม่มีใครมีทอง';
-  return '';
-}
-
-function openActionMenu(title, ids, canAct) {
-  openModal({
-    title,
-    text: 'เลือก Action ที่จะใช้',
-    build: (body, close) => {
-      const list = el('div', 'target-list');
-      for (const id of ids) {
-        const meta = ACTION_LABELS[id];
-        const reason = actionReason(id, canAct);
-        const b = el('button', 'target-btn');
-        b.appendChild(el('span', null, meta.label));
-        b.appendChild(el('small', null, reason || meta.amount || ''));
-        b.disabled = !canAct || !!reason;
-        b.addEventListener('click', () => { close(); onAction(id); });
-        list.appendChild(b);
-      }
-      body.appendChild(list);
-      const cancel = el('button', 'btn btn-ghost', 'ยกเลิก');
-      cancel.addEventListener('click', close);
-      body.appendChild(cancel);
-    },
-  });
-}
-
 function renderActions() {
   const spectating = !amAlive();
   document.body.classList.toggle('is-spectator', spectating);
@@ -474,23 +501,101 @@ function renderActions() {
   if (spectating) { $('#action-bar').innerHTML = ''; return; }
 
   const s = app.state;
+  const my = me();
   const canAct = isMyTurn() && !s.pending;
 
   const bar = $('#action-bar');
   bar.innerHTML = '';
 
-  function mainButton(label, cls, hint, onClick) {
-    const b = el('button', 'act ' + cls);
-    b.appendChild(el('span', null, label));
-    b.appendChild(el('em', null, hint || '·'));
+  // 1) เก็บเงิน
+  {
+    const meta = ACTION_LABELS.income;
+    const b = el('button', 'act gold');
+    b.appendChild(el('span', 'act-glyph', '💰'));
+    b.appendChild(el('span', null, meta.label));
+    b.appendChild(el('em', null, meta.amount));
     b.disabled = !canAct;
-    b.addEventListener('click', onClick);
+    b.addEventListener('click', () => onAction('income'));
     bar.appendChild(b);
   }
 
-  mainButton('ใช้ความสามารถการ์ด', 'gold', '', () => openActionMenu('ใช้ความสามารถการ์ด', ABILITY_ACTION_IDS, canAct));
-  mainButton('ดำเนินการ / เลือกเป้าหมาย', 'danger', '', () => openActionMenu('ดำเนินการ', BASIC_ACTION_IDS, canAct));
-  mainButton('จบเทิร์น', '', '+1 ทอง', () => onAction('income'));
+  // 2) ใช้ความสามารถ
+  {
+    const anyUsable = ABILITY_IDS.some((id) => canUseAbility(id, s, my));
+    const b = el('button', 'act ability');
+    b.appendChild(el('span', 'act-glyph', '🃏'));
+    b.appendChild(el('span', null, 'ใช้ความสามารถ'));
+    b.appendChild(el('em', null, canAct ? (anyUsable ? 'เลือก' : 'ไม่มี') : '·'));
+    b.disabled = !canAct || !anyUsable;
+    b.addEventListener('click', openAbilityMenu);
+    bar.appendChild(b);
+  }
+
+  // 3) โจมตี (ไล่ออกทันที — coup)
+  {
+    const meta = ACTION_LABELS.coup;
+    const b = el('button', 'act danger');
+    b.appendChild(el('span', 'act-glyph', '⚔️'));
+    b.appendChild(el('span', null, 'โจมตี'));
+    const canCoup = canAct && my.gold >= 7 && s.players.some((p) => p.alive && p.id !== uid());
+    b.appendChild(el('em', null, canAct && my.gold < 7 ? 'ต้องมี 7 ทอง' : meta.amount));
+    b.disabled = !canCoup;
+    b.addEventListener('click', () => onAction('coup'));
+    bar.appendChild(b);
+  }
+}
+
+/** เช็คคร่าว ๆ ว่าความสามารถนี้ "กดได้ตอนนี้ไหม" (เงินพอ / มีเป้าหมายให้เลือก) */
+function canUseAbility(id, s, my) {
+  const meta = ABILITY_META[id];
+  if (!my || my.gold < meta.cost) return false;
+  if (id === 'steal') return s.players.some((p) => p.alive && p.id !== uid() && p.gold > 0);
+  if (meta.needTarget) return s.players.some((p) => p.alive && p.id !== uid());
+  return true;
+}
+
+/** เมนูของปุ่ม "ใช้ความสามารถ" — แสดงทุกความสามารถ อ้างเป็นตัวละครอื่นได้ (บลัฟ) */
+function openAbilityMenu() {
+  const s = app.state;
+  const my = me();
+
+  openModal({
+    title: '🃏 ใช้ความสามารถ',
+    text: 'อ้างเป็นตัวละครไหนก็ได้ — ถ้าโดนจับได้ว่าโกหกจะเสียการ์ด 1 ใบ',
+    build: (body, close) => {
+      const list = el('div', 'ability-list');
+      for (const id of ABILITY_IDS) {
+        const meta = ABILITY_META[id];
+        const labelMeta = ACTION_LABELS[id];
+        const usable = canUseAbility(id, s, my);
+
+        const row = document.createElement('button');
+        row.className = 'ability-row';
+        row.disabled = !usable;
+
+        row.appendChild(el('span', 'ability-glyph', meta.glyph));
+
+        const info = el('div', 'ability-info');
+        info.appendChild(el('b', null, labelMeta.label));
+        const charName = meta.card ? CHARACTERS[meta.card].name : 'ไม่ต้องอ้างการ์ด';
+        info.appendChild(el('span', null, charName));
+        row.appendChild(info);
+
+        if (meta.card && app.hand.includes(meta.card)) {
+          row.appendChild(el('span', 'ability-badge', 'มีการ์ดนี้'));
+        }
+        row.appendChild(el('span', 'ability-cost', labelMeta.amount || (meta.cost ? `−${meta.cost}` : '')));
+
+        row.addEventListener('click', () => { close(); onAction(id); });
+        list.appendChild(row);
+      }
+      body.appendChild(list);
+
+      const cancel = el('button', 'btn btn-ghost', 'ยกเลิก');
+      cancel.addEventListener('click', close);
+      body.appendChild(cancel);
+    },
+  });
 }
 
 function renderLog() {
@@ -505,7 +610,10 @@ function renderLog() {
 function renderEnd() {
   const s = app.state;
   const w = s.players.find((p) => p.id === s.winnerId);
-  $('#end-text').textContent = w ? `${w.name} เป็นผู้รอดชีวิตคนสุดท้ายของห้อง!` : 'จบเกมแล้ว';
+  $('#end-title').innerHTML = w
+    ? `พี่ใหญ่คือ<span class="end-winner-name">${escapeHtml(w.name)}</span>`
+    : 'จบเกมแล้ว';
+  $('#end-text').textContent = w ? 'ชนะเกม! 🏆' : '';
   $('#btn-again').hidden = s.hostId !== uid();
   $('#end-hint').textContent = s.hostId === uid() ? '' : 'รอเจ้าของห้องกดเล่นอีกครั้ง';
   if (app.prevPendingKey !== 'ended') { sfx.play('win'); app.prevPendingKey = 'ended'; }
