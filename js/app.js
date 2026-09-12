@@ -76,6 +76,22 @@ async function boot() {
 }
 
 function wireStaticButtons() {
+  // ---- กันเหนียว: บังคับซ่อนองค์ประกอบ overlay ทุกตัวด้วย inline style โดยตรง ----
+  // ไม่พึ่งพา CSS cascade อย่างเดียวอีกต่อไป — ไม่ว่าไฟล์ CSS จะมีปัญหาอะไรซ่อนอยู่
+  // (ลำดับไฟล์ผิด, cache เก่าค้าง, กฎอื่นชนกัน ฯลฯ) โค้ดนี้จะบังคับผลลัพธ์ให้ถูกต้องเสมอ
+  // เพราะ inline style ที่ตั้งค่าตรง ๆ (ไม่ว่างเปล่า) จะชนะทุกกฎใน .css ที่ไม่ได้ใส่ !important
+  function enforceHidden(el) {
+    if (!el) return;
+    el.style.display = el.hidden ? 'none' : '';
+  }
+  const OVERLAY_IDS = ['#modal', '#log-sheet', '#countdown', '#notice', '#spectator-bar', '#toast', '#conn', '#menu-error'];
+  for (const sel of OVERLAY_IDS) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    enforceHidden(el); // เช็คทันทีตอนโหลดหน้า
+    new MutationObserver(() => enforceHidden(el)).observe(el, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
   document.querySelectorAll('[data-go]').forEach((b) => {
     b.addEventListener('click', () => { sfx.play('tap'); go(b.dataset.go); });
   });
