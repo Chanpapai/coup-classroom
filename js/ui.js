@@ -70,7 +70,7 @@ export function seatEl(p, { isTurn, isMe }) {
 
   if (p.lost.length) {
     const names = p.lost.map((c) => CHARACTERS[c]?.name || c).join(' · ');
-    n.appendChild(el('div', 'card-skill', names));
+    n.appendChild(el('div', 'seat-lost', names));
   }
 
   if (!p.alive) n.appendChild(el('span', 'seat-tag dead', 'ออกแล้ว'));
