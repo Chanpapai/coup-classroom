@@ -125,6 +125,7 @@
 .turn-strip.is-me { background: var(--marker); color: #fff; }
 
 /* กระดานผู้เล่น — โล่ง เต็มความกว้าง ไม่มีโต๊ะ */
+/* ข้อ: เพิ่มมุมมอง 3D เบา ๆ ให้ที่นั่งผู้เล่นดูเหมือนวางอยู่บนโต๊ะจริง (ไม่กระทบ layout เดิม) */
 .board {
   min-height: 0;
   padding: 10px;
@@ -133,6 +134,7 @@
   grid-auto-rows: 1fr;
   gap: 8px;
   align-content: stretch;
+  perspective: 1100px;
 }
 .board.cols-3 { grid-template-columns: repeat(3, 1fr); }
 
@@ -145,6 +147,9 @@
   min-height: 0;
   position: relative;
   overflow: hidden;
+  transform: rotateX(3deg);
+  box-shadow: 0 6px 12px rgba(20,26,38,.10), 0 1px 0 rgba(255,255,255,.6) inset;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 .seat-name {
   font-weight: 600; font-size: 14px;
@@ -160,7 +165,7 @@
 }
 .seat-cards i.lost { background: var(--red-soft); border-color: var(--red); }
 
-.seat.is-turn { border-color: var(--marker); box-shadow: 0 0 0 2px rgba(43,98,217,.18); }
+.seat.is-turn { border-color: var(--marker); box-shadow: 0 0 0 2px rgba(43,98,217,.18), 0 8px 16px rgba(43,98,217,.18); transform: rotateX(3deg) translateY(-2px); }
 .seat.is-me   { background: #F7FAFF; }
 .seat.is-dead { opacity: .45; }
 .seat.is-dead .seat-name { text-decoration: line-through; }
@@ -217,8 +222,10 @@
   background: var(--paper-2);
   border-top: 1px solid var(--rule);
 }
-.my-cards { display: flex; gap: 10px; flex: 1; min-width: 0; }
+.my-cards { display: flex; gap: 10px; flex: 1; min-width: 0; perspective: 700px; }
 .my-cards .card { width: 74px; flex: 0 0 auto; }
+.my-cards .card:nth-child(odd) { transform: rotate(-2deg); }
+.my-cards .card:nth-child(even) { transform: rotate(2deg); }
 .my-gold {
   margin-left: auto; text-align: center;
   background: var(--gold-soft); border-radius: var(--r);
@@ -227,31 +234,35 @@
 .my-gold i { display: block; font-style: normal; font-size: 11px; color: #7A5A00; }
 .my-gold b { font-family: 'Mali', cursive; font-size: 28px; color: var(--gold); line-height: 1.1; }
 
-/* แถบ Action */
+/* แถบ Action — ปรับเหลือ 3 ปุ่มหลักตามที่ขอ (คงสไตล์เดิมของปุ่ม แค่จำนวนลดลง) */
 .action-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   padding: 8px 10px calc(10px + var(--safe-b));
   background: var(--paper-2);
   border-top: 1px solid var(--rule);
   box-shadow: var(--shadow-up);
 }
 .act {
-  min-height: 52px;
+  min-height: 56px;
   border: 1px solid var(--rule);
   border-radius: var(--r-sm);
   background: var(--paper);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; padding: 4px 2px;
-  font-size: 11.5px; font-weight: 600; line-height: 1.2;
+  gap: 2px; padding: 6px 4px;
+  font-size: 12.5px; font-weight: 600; line-height: 1.2;
   text-align: center; cursor: pointer;
+  /* ข้อ: ปุ่มยกตัวแบบ 3D เบา ๆ ให้ความรู้สึกเหมือนกดปุ่มจริง */
+  box-shadow: 0 3px 0 rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.08);
+  transform: translateY(0);
+  transition: transform .08s ease, box-shadow .08s ease, background .15s ease;
 }
 .act em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--marker); }
 .act.gold em { color: var(--gold); }
 .act.danger em { color: var(--red); }
-.act:active:not(:disabled) { transform: scale(.95); background: #EDF2FB; }
-.act:disabled { opacity: .38; cursor: not-allowed; }
+.act:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.08); background: #EDF2FB; }
+.act:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
 .act.wide { grid-column: span 2; }
 
 /* ── ข้อ 3: โหมดผู้ชม ── */
@@ -300,7 +311,7 @@
 /* ── จอกว้าง / แนวนอน ── */
 @media (min-width: 620px) {
   .board { grid-template-columns: repeat(3, 1fr); padding: 14px; gap: 12px; }
-  .action-bar { grid-template-columns: repeat(7, 1fr); max-width: 900px; margin: 0 auto; width: 100%; }
+  .action-bar { grid-template-columns: repeat(3, 1fr); max-width: 900px; margin: 0 auto; width: 100%; }
   .act.wide { grid-column: span 1; }
   .my-cards .card { width: 88px; }
   .screen[data-screen="menu"] .pad,
