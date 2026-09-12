@@ -1,40 +1,63 @@
 /* ============================================================
    ฐาน: สี ตัวอักษร และการล็อกหน้าจอ
-   ธีม "สมุดเรียน" — พื้นขาวอมฟ้า เส้นบรรทัดจาง ปากกาน้ำเงิน
+   ธีม "ที่นี่พี่ใหญ่" — การ์ดเกม 3D + ห้องเรียนไทยสมัยใหม่
+   โต๊ะไม้เข้ม / สักหลาดเขียว / ปุ่มนูน 3 มิติ / เหรียญทองจริง
    ============================================================ */
 
+[hidden] {
+  display: none !important;
+}
+
 :root {
-  --paper:      #F4F7FA;
-  --paper-2:    #FFFFFF;
-  --rule:       #DCE5F0;
-  --ink:        #1E2430;
-  --ink-soft:   #6E7889;
-  --ink-faint:  #A6AEBC;
+  /* พื้นผิวหลัก — กระดาน/พื้นหลังโทนเข้มแบบห้องเกม */
+  --paper:      #10192b;   /* พื้นหลังแอปหลัก (เข้ม มีมิติ) */
+  --paper-2:    #1a2740;   /* พื้นผิวการ์ด/แผง ชั้นบน */
+  --paper-3:    #223154;   /* ผิวยกสูงกว่า .paper-2 อีกชั้น */
+  --rule:       #2d3f66;   /* เส้นขอบบาง */
+  --ink:        #f2f5ff;   /* ตัวอักษรหลัก (บนพื้นเข้ม) */
+  --ink-soft:   #a9b6d6;
+  --ink-faint:  #6f7da3;
+  --ink-on-light: #1a2740; /* ตัวอักษรบนพื้นสว่าง เช่น การ์ด */
 
-  --marker:     #2B62D9;   /* ปากกาน้ำเงิน — สีหลัก */
-  --marker-d:   #1E4CB0;
-  --gold:       #E0A008;   /* ทอง */
-  --gold-soft:  #FDF3D9;
-  --red:        #D24545;   /* ปากกาแดง — อันตราย */
-  --red-soft:   #FCEBEB;
-  --green:      #2C9463;   /* พร้อม / ยังอยู่ */
-  --green-soft: #E6F4EC;
+  --felt:       #123a2c;   /* สักหลาดโต๊ะตรงกลาง */
+  --felt-2:     #0d2c21;
+  --wood:       #6b4527;   /* ขอบไม้โต๊ะ */
+  --wood-2:     #4a2f19;
 
-  --r-sm: 8px;
-  --r:    14px;
-  --r-lg: 22px;
+  --marker:     #3d7bff;   /* ปุ่มหลัก น้ำเงินสด */
+  --marker-d:   #1f4fc4;
+  --marker-l:   #7aa4ff;
 
-  --shadow:    0 1px 2px rgba(30, 36, 48, .06), 0 4px 12px rgba(30, 36, 48, .06);
-  --shadow-up: 0 -2px 14px rgba(30, 36, 48, .07);
+  --gold:       #f2b013;   /* ทอง */
+  --gold-d:     #b9800a;
+  --gold-l:     #ffe08a;
+  --gold-soft:  #3a2c0f;
 
-  --tap: 48px;                       /* ขนาดปุ่มขั้นต่ำสำหรับนิ้ว */
+  --red:        #ef4444;
+  --red-d:      #b32424;
+  --red-soft:   #3a1414;
+
+  --green:      #22c07d;
+  --green-d:    #148a57;
+  --green-soft: #123420;
+
+  --r-sm: 10px;
+  --r:    16px;
+  --r-lg: 26px;
+
+  /* เงา 3D แบบเป็นชั้น ให้ความรู้สึกนูน/ลอย */
+  --shadow:     0 1px 0 rgba(255,255,255,.04) inset, 0 10px 22px rgba(0,0,0,.38), 0 2px 4px rgba(0,0,0,.3);
+  --shadow-up:  0 -6px 24px rgba(0,0,0,.4);
+  --shadow-lg:  0 24px 48px rgba(0,0,0,.5), 0 4px 10px rgba(0,0,0,.35);
+  --bevel-top:  inset 0 1px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.18);
+
+  --tap: 48px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-/* ── ข้อ 4: ล็อกหน้าจอ ทั้งหน้าอยู่ในกรอบเดียว ไม่มีการเลื่อน ── */
 html, body {
   margin: 0;
   padding: 0;
@@ -43,7 +66,7 @@ html, body {
   position: fixed;
   inset: 0;
   overscroll-behavior: none;
-  touch-action: manipulation;        /* กัน double-tap zoom */
+  touch-action: manipulation;
 }
 
 body {
@@ -51,11 +74,8 @@ body {
   font-size: 16px;
   line-height: 1.55;
   color: var(--ink);
-  background: var(--paper);
-  /* เส้นบรรทัดสมุดจางๆ เป็นพื้นหลัง */
-  background-image: repeating-linear-gradient(
-    to bottom, transparent 0 31px, var(--rule) 31px 32px
-  );
+  background:
+    radial-gradient(120% 90% at 50% -10%, #1c2b4d 0%, #10192b 55%, #070d19 100%);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -75,7 +95,6 @@ h1, h2, h3, .title, .countdown-num {
 
 button, input { font: inherit; color: inherit; }
 
-/* ที่เดียวในเกมที่เลื่อนได้ คือเนื้อหายาวๆ ที่เลื่อนอยู่ในกรอบตัวเอง */
 .tutorial-scroll, .log-list, .lobby-body, .modal-body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -83,7 +102,7 @@ button, input { font: inherit; color: inherit; }
 }
 
 :focus-visible {
-  outline: 3px solid var(--marker);
+  outline: 3px solid var(--marker-l);
   outline-offset: 2px;
   border-radius: 6px;
 }
