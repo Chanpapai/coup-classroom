@@ -4,22 +4,22 @@
 // แล้วส่งความตั้งใจของผู้เล่นกลับไปให้เซิร์ฟเวอร์ตัดสิน
 // ============================================================
 
-import { CHARACTERS, ACTION_LABELS } from './config.js';
+import { CHARACTERS, ACTION_LABELS, APP_VERSION } from './config.js';
 import { sb, uid, signIn, call, fetchRoom, subscribe } from './net.js';
 import { $, el, cardEl, seatEl, popGold, toast, renderTutorial } from './ui.js';
 import * as sfx from './sound.js';
 
 const LS_ROOM = 'coup-classroom-room';
 
-// ปุ่มที่ 2 "ใช้ความสามารถ" — รวม Action ที่ต้องอ้างสิทธิ์เป็นตัวละคร (บลัฟได้)
-// บวกกับ "เบิกเงิน" ที่ไม่ต้องอ้างการ์ดใด ๆ (ทุกคนใช้ได้เสมอ)
-const ABILITY_IDS = ['foreign_aid', 'tax', 'steal', 'exchange', 'assassinate'];
+// ปุ่มที่ 4 "ใช้ความสามารถการ์ด" — แสดงเป็นตาราง 5 การ์ดตัวละคร
+// การ์ดที่ถืออยู่จริง = กรอบเขียว, ไม่มี = กรอบแดง (ยังกดอ้าง/บลัฟได้ทั้งคู่)
+// เรียงตามลำดับใน CHARACTERS (config.js): duke, captain, ambassador, contessa, assassin
+const CARD_ACTION = { duke: 'tax', captain: 'steal', ambassador: 'exchange', assassin: 'assassinate' };
 const ABILITY_META = {
-  foreign_aid: { glyph: '💴', card: null,         cost: 0, needTarget: false },
-  tax:         { glyph: '📋', card: 'duke',       cost: 0, needTarget: false },
-  steal:       { glyph: '🎒', card: 'captain',    cost: 0, needTarget: true  },
-  exchange:    { glyph: '📚', card: 'ambassador', cost: 0, needTarget: false },
-  assassinate: { glyph: '✏️', card: 'assassin',   cost: 3, needTarget: true  },
+  tax:         { needTarget: false, cost: 0 },
+  steal:       { needTarget: true,  cost: 0 },
+  exchange:    { needTarget: false, cost: 0 },
+  assassinate: { needTarget: true,  cost: 3 },
 };
 
 function escapeHtml(s) {
@@ -188,6 +188,17 @@ async function onJoin() {
 
 async function enterRoom(code, { silent = false } = {}) {
   const data = await fetchRoom(code);
+
+  // ห้องจากเวอร์ชันเก่า (ค้างมาก่อน deploy ใหม่) — อย่าพยายามวาด อาจโครงสร้างไม่ตรงกัน
+  if (data.state?.appVersion !== APP_VERSION) {
+    localStorage.removeItem(LS_ROOM);
+    if (!silent) {
+      go('home');
+      toast('เกมมีการอัปเดตเวอร์ชันใหม่ กรุณาสร้างห้องใหม่');
+    }
+    throw new Error('ห้องนี้มาจากเวอร์ชันเก่า');
+  }
+
   app.code = code;
   app.roomId = data.roomId;
   app.state = data.state;
@@ -403,16 +414,41 @@ function renderGame() {
   $('#pile-discard').textContent = s.players.reduce((a, p) => a + p.lost.length, 0);
   $('#pile-treasury').textContent = s.treasury;
 
-  // การ์ดของเรา
+  // การ์ดของเรา — ไม่โชว์ชื่อ/สกิลบนหน้าหลัก แตะเพื่อดูรายละเอียด (ข้อกำหนดใหม่)
   const mine = $('#my-cards');
   mine.innerHTML = '';
-  for (const c of app.hand) mine.appendChild(cardEl(c, { showSkill: true }));
+  for (const c of app.hand) {
+    const node = cardEl(c, { compact: true });
+    node.classList.add('selectable');
+    node.addEventListener('click', () => openCardDetail(c));
+    mine.appendChild(node);
+  }
   for (const c of (my?.lost || [])) mine.appendChild(cardEl(c, { lost: true, showSkill: false }));
   $('#my-gold').querySelector('b').textContent = my?.gold ?? 0;
 
   renderNotice();
   renderActions();
   renderModal();
+}
+
+/** แตะการ์ดในมือตัวเองเพื่อดูชื่อ/ความสามารถ (หน้าหลักไม่โชว์ชื่อการ์ดตรงๆ ตามที่ขอ) */
+function openCardDetail(cardId) {
+  const info = CHARACTERS[cardId];
+  sfx.play('tap');
+  openModal({
+    local: true,
+    title: `${info.glyph} ${info.name}`,
+    text: info.desc,
+    build: (body, close) => {
+      const big = cardEl(cardId, { showSkill: true });
+      big.style.width = '140px';
+      big.style.margin = '0 auto';
+      body.appendChild(big);
+      const ok = el('button', 'btn btn-primary', 'ปิด');
+      ok.addEventListener('click', close);
+      body.appendChild(ok);
+    },
+  });
 }
 
 /** แถบบนสุดของหน้าเกม: ชื่อตาปัจจุบัน + ลำดับวงกลม ◉ ปัจจุบัน → ○ ถัดไป → ... */
@@ -488,10 +524,11 @@ function renderNotice() {
  * ข้อ 3: ถ้าตายแล้ว ซ่อนแถบ Action ทั้งแถบ แล้วขึ้นแถบผู้ชมแทน
  * ไม่มีปุ่มอะไรให้กดเลย และ .is-spectator ยังกันกล่องโต้ตอบไม่ให้เด้งด้วย
  *
- * ข้อ 4: เหลือปุ่มหลักแค่ 3 ปุ่ม
- *  1) เก็บเงิน      → income ทันที +1
- *  2) ใช้ความสามารถ → เปิดเมนูเลือก (เบิกเงิน/เก็บเงินห้อง/ยืมของ/จั่วการ์ด/ไล่ออก)
- *  3) โจมตี         → ไล่ออกทันที (coup) เป้าหมายเสียการ์ดแน่นอน
+ * ปุ่มหลัก 4 ปุ่ม:
+ *  1) เก็บเงิน +1   → income ทันที
+ *  2) เก็บเงิน +2   → foreign_aid ทันที (ไม่ต้องอ้างการ์ด แต่ถูกหัวหน้าห้องขัดขวางได้)
+ *  3) บังคับออก    → coup จ่าย 7 ทอง บังคับคนอื่นเสียการ์ดแน่นอน
+ *  4) ใช้ความสามารถการ์ด → เปิดตารางการ์ด 5 ใบ (เขียว=มีจริง แดง=ไม่มี แต่กดอ้างได้ทั้งคู่)
  */
 function renderActions() {
   const spectating = !amAlive();
@@ -503,11 +540,12 @@ function renderActions() {
   const s = app.state;
   const my = me();
   const canAct = isMyTurn() && !s.pending;
+  const hasTarget = s.players.some((p) => p.alive && p.id !== uid());
 
   const bar = $('#action-bar');
   bar.innerHTML = '';
 
-  // 1) เก็บเงิน
+  // 1) เก็บเงิน +1
   {
     const meta = ACTION_LABELS.income;
     const b = el('button', 'act gold');
@@ -519,77 +557,90 @@ function renderActions() {
     bar.appendChild(b);
   }
 
-  // 2) ใช้ความสามารถ
+  // 2) เก็บเงิน +2 (เบิกเงิน / foreign aid)
   {
-    const anyUsable = ABILITY_IDS.some((id) => canUseAbility(id, s, my));
-    const b = el('button', 'act ability');
-    b.appendChild(el('span', 'act-glyph', '🃏'));
-    b.appendChild(el('span', null, 'ใช้ความสามารถ'));
-    b.appendChild(el('em', null, canAct ? (anyUsable ? 'เลือก' : 'ไม่มี') : '·'));
-    b.disabled = !canAct || !anyUsable;
-    b.addEventListener('click', openAbilityMenu);
+    const meta = ACTION_LABELS.foreign_aid;
+    const b = el('button', 'act gold');
+    b.appendChild(el('span', 'act-glyph', '💴'));
+    b.appendChild(el('span', null, meta.label));
+    b.appendChild(el('em', null, meta.amount));
+    b.disabled = !canAct;
+    b.addEventListener('click', () => onAction('foreign_aid'));
     bar.appendChild(b);
   }
 
-  // 3) โจมตี (ไล่ออกทันที — coup)
+  // 3) บังคับออก (coup — จ่าย 7 ทอง)
   {
     const meta = ACTION_LABELS.coup;
     const b = el('button', 'act danger');
     b.appendChild(el('span', 'act-glyph', '⚔️'));
-    b.appendChild(el('span', null, 'โจมตี'));
-    const canCoup = canAct && my.gold >= 7 && s.players.some((p) => p.alive && p.id !== uid());
+    b.appendChild(el('span', null, 'บังคับออก'));
+    const canCoup = canAct && my.gold >= 7 && hasTarget;
     b.appendChild(el('em', null, canAct && my.gold < 7 ? 'ต้องมี 7 ทอง' : meta.amount));
     b.disabled = !canCoup;
     b.addEventListener('click', () => onAction('coup'));
     bar.appendChild(b);
   }
+
+  // 4) ใช้ความสามารถการ์ด
+  {
+    const anyUsable = Object.keys(CARD_ACTION).some((card) => canUseAbility(CARD_ACTION[card], s));
+    const b = el('button', 'act ability');
+    b.appendChild(el('span', 'act-glyph', '🃏'));
+    b.appendChild(el('span', null, 'ใช้ความสามารถ'));
+    b.appendChild(el('em', null, canAct ? (anyUsable ? 'เลือกการ์ด' : 'ไม่มี') : '·'));
+    b.disabled = !canAct || !anyUsable;
+    b.addEventListener('click', openAbilityMenu);
+    bar.appendChild(b);
+  }
 }
 
-/** เช็คคร่าว ๆ ว่าความสามารถนี้ "กดได้ตอนนี้ไหม" (เงินพอ / มีเป้าหมายให้เลือก) */
-function canUseAbility(id, s, my) {
-  const meta = ABILITY_META[id];
+/** เช็คคร่าว ๆ ว่า action นี้ "กดได้ตอนนี้ไหม" (เงินพอ / มีเป้าหมายให้เลือก) */
+function canUseAbility(actionId, s) {
+  const my = me();
+  const meta = ABILITY_META[actionId];
   if (!my || my.gold < meta.cost) return false;
-  if (id === 'steal') return s.players.some((p) => p.alive && p.id !== uid() && p.gold > 0);
+  if (actionId === 'steal') return s.players.some((p) => p.alive && p.id !== uid() && p.gold > 0);
   if (meta.needTarget) return s.players.some((p) => p.alive && p.id !== uid());
   return true;
 }
 
-/** เมนูของปุ่ม "ใช้ความสามารถ" — แสดงทุกความสามารถ อ้างเป็นตัวละครอื่นได้ (บลัฟ) */
+/**
+ * เมนู "ใช้ความสามารถการ์ด" — ตารางการ์ด 5 ใบตามที่ขอ
+ * มีจริงในมือ = กรอบเขียว, ไม่มี = กรอบแดง (แต่ยังกดอ้างสิทธิ์ได้ทั้งคู่ = บลัฟ)
+ * ลูกรักครู (contessa) ไม่มี Action ให้กด เพราะความสามารถเป็นการป้องกันเฉยๆ
+ */
 function openAbilityMenu() {
   const s = app.state;
-  const my = me();
 
   openModal({
-    title: '🃏 ใช้ความสามารถ',
-    text: 'อ้างเป็นตัวละครไหนก็ได้ — ถ้าโดนจับได้ว่าโกหกจะเสียการ์ด 1 ใบ',
+    local: true,
+    title: '🃏 ใช้ความสามารถการ์ด',
+    text: 'แตะการ์ดที่จะอ้างสิทธิ์ — อ้างใบที่ไม่มีจริงก็ได้ (บลัฟ) แต่ถ้าโดนจับได้จะเสียการ์ด',
     build: (body, close) => {
-      const list = el('div', 'ability-list');
-      for (const id of ABILITY_IDS) {
-        const meta = ABILITY_META[id];
-        const labelMeta = ACTION_LABELS[id];
-        const usable = canUseAbility(id, s, my);
+      const grid = el('div', 'ability-grid');
+      for (const cardId of Object.keys(CHARACTERS)) {
+        const held = app.hand.includes(cardId);
+        const actionId = CARD_ACTION[cardId];
+        const info = CHARACTERS[cardId];
 
-        const row = document.createElement('button');
-        row.className = 'ability-row';
-        row.disabled = !usable;
+        const tile = el('button', 'ability-card ' + (held ? 'is-held' : 'is-missing'));
+        tile.appendChild(cardEl(cardId, { compact: true }));
+        tile.appendChild(el('div', 'ability-card-name', info.name));
 
-        row.appendChild(el('span', 'ability-glyph', meta.glyph));
-
-        const info = el('div', 'ability-info');
-        info.appendChild(el('b', null, labelMeta.label));
-        const charName = meta.card ? CHARACTERS[meta.card].name : 'ไม่ต้องอ้างการ์ด';
-        info.appendChild(el('span', null, charName));
-        row.appendChild(info);
-
-        if (meta.card && app.hand.includes(meta.card)) {
-          row.appendChild(el('span', 'ability-badge', 'มีการ์ดนี้'));
+        if (actionId) {
+          const usable = canUseAbility(actionId, s);
+          tile.appendChild(el('div', 'ability-card-skill', ACTION_LABELS[actionId].label));
+          tile.disabled = !usable;
+          tile.addEventListener('click', () => { close(); onAction(actionId); });
+        } else {
+          // contessa: ไม่มี action เชิงรุก แค่กันการลอบโจมตี — แตะเพื่อดูคำอธิบายเฉยๆ
+          tile.appendChild(el('div', 'ability-card-skill', 'ป้องกันอย่างเดียว'));
+          tile.addEventListener('click', () => { close(); openCardDetail(cardId); });
         }
-        row.appendChild(el('span', 'ability-cost', labelMeta.amount || (meta.cost ? `−${meta.cost}` : '')));
-
-        row.addEventListener('click', () => { close(); onAction(id); });
-        list.appendChild(row);
+        grid.appendChild(tile);
       }
-      body.appendChild(list);
+      body.appendChild(grid);
 
       const cancel = el('button', 'btn btn-ghost', 'ยกเลิก');
       cancel.addEventListener('click', close);
@@ -633,6 +684,7 @@ async function onAction(action) {
   if (!targets.length) { toast('ไม่มีเป้าหมายที่เลือกได้'); return; }
 
   openModal({
+    local: true,
     title: ACTION_LABELS[action].label,
     text: 'เลือกผู้เล่นเป้าหมาย',
     build: (body, close) => {
@@ -656,7 +708,7 @@ async function onAction(action) {
 
 let modalOpen = false;
 
-function openModal({ title, text, timer = false, build, key }) {
+function openModal({ title, text, timer = false, build, key, local = false }) {
   const veil = $('#modal');
   $('#modal-title').textContent = title;
   $('#modal-text').textContent = text || '';
@@ -667,13 +719,20 @@ function openModal({ title, text, timer = false, build, key }) {
   build(body, closeModal);
   veil.hidden = false;
   veil.dataset.key = key || '';
+  veil.dataset.local = local ? '1' : '';
   modalOpen = true;
 }
 
 function closeModal() {
   $('#modal').hidden = true;
   $('#modal').dataset.key = '';
+  $('#modal').dataset.local = '';
   modalOpen = false;
+}
+
+/** ปิด modal ได้เฉพาะตอนไม่ใช่กล่องที่เปิดเอง (local) — กันไม่ให้ state push จากคนอื่นมาปิดเมนูที่เรากำลังเลือกอยู่ */
+function closeServerModalIfAny() {
+  if (modalOpen && $('#modal').dataset.local !== '1') closeModal();
 }
 
 /** ตัดสินว่าตอนนี้ "ฉัน" ต้องตอบอะไรไหม แล้วเปิดกล่องให้ตรงเรื่อง */
@@ -682,7 +741,7 @@ function renderModal() {
   const pd = s.pending;
 
   // ข้อ 3 ย้ำอีกชั้น: คนตายไม่มีทางเจอกล่องให้กดอะไรทั้งสิ้น
-  if (!pd || !amAlive()) { if (modalOpen) closeModal(); return; }
+  if (!pd || !amAlive()) { closeServerModalIfAny(); return; }
 
   const nm = (id) => s.players.find((p) => p.id === id)?.name || '?';
   const key = JSON.stringify([pd.kind, pd.who, pd.actor, pd.blocker, pd.claim, pd.blockClaim]);
@@ -695,7 +754,7 @@ function renderModal() {
     const suspect = pd.kind === 'challenge_block' ? pd.blocker : pd.actor;
     const claim = pd.kind === 'challenge_block' ? pd.blockClaim : pd.claim;
     const eligible = suspect !== myId && !(pd.passed || []).includes(myId);
-    if (!eligible) { if (modalOpen) closeModal(); return; }
+    if (!eligible) { closeServerModalIfAny(); return; }
 
     sfx.play('alert');
     openModal({
@@ -715,7 +774,7 @@ function renderModal() {
   // 2) มีสิทธิ์ขัดขวาง
   if (pd.kind === 'block') {
     const eligible = pd.responders.includes(myId) && !pd.passed.includes(myId);
-    if (!eligible) { if (modalOpen) closeModal(); return; }
+    if (!eligible) { closeServerModalIfAny(); return; }
 
     const blockers = { foreign_aid: ['duke'], steal: ['captain', 'ambassador'], assassinate: ['contessa'] }[pd.action] || [];
     const isMeTarget = pd.target === myId;
@@ -799,7 +858,7 @@ function renderModal() {
     return;
   }
 
-  if (modalOpen) closeModal();
+  closeServerModalIfAny();
 }
 
 function btn(label, cls, fn) {
