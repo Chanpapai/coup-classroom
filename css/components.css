@@ -254,10 +254,10 @@
 .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .choice-grid.three { grid-template-columns: repeat(3, 1fr); }
 
-.target-list, .ability-list { display: flex; flex-direction: column; gap: 8px; }
-.target-btn, .ability-row {
+.target-list { display: flex; flex-direction: column; gap: 8px; }
+.target-btn {
   min-height: var(--tap);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 14px;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: var(--r);
@@ -268,22 +268,29 @@
   text-align: left;
   width: 100%;
 }
-.target-btn { justify-content: space-between; }
-.target-btn:active, .ability-row:active:not(:disabled) { transform: translateY(2px); box-shadow: var(--bevel-top), 0 2px 0 rgba(0,0,0,.3), 0 4px 8px rgba(0,0,0,.3); }
+.target-btn:active { transform: translateY(2px); box-shadow: var(--bevel-top), 0 2px 0 rgba(0,0,0,.3), 0 4px 8px rgba(0,0,0,.3); }
 .target-btn small { color: var(--ink-soft); font-weight: 400; }
 
-.ability-row { flex-direction: row; }
-.ability-row:disabled { opacity: .4; cursor: not-allowed; }
-.ability-glyph { font-size: 26px; flex: 0 0 auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
-.ability-info { flex: 1; min-width: 0; }
-.ability-info b { display: block; font-size: 15px; }
-.ability-info span { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 400; }
-.ability-cost { font-size: 13px; font-weight: 700; color: var(--gold); flex: 0 0 auto; }
-.ability-badge {
-  font-size: 10px; font-weight: 700; color: #06301d;
-  background: linear-gradient(180deg, var(--gold-l), var(--gold));
-  padding: 2px 7px; border-radius: 99px; flex: 0 0 auto;
+/* ตารางการ์ด 5 ใบของเมนู "ใช้ความสามารถการ์ด" — เขียว=มีจริง แดง=ไม่มี (ยังกดอ้างได้ทั้งคู่) */
+.ability-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
 }
+.ability-card {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 6px 10px;
+  border-radius: var(--r);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper-2));
+  box-shadow: var(--bevel-top), 0 4px 0 rgba(0,0,0,.3), 0 8px 14px rgba(0,0,0,.3);
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.ability-card:active:not(:disabled) { transform: translateY(2px); }
+.ability-card:disabled { opacity: .45; cursor: not-allowed; }
+.ability-card .card { width: 64px; pointer-events: none; }
+.ability-card.is-held    { border-color: var(--green); box-shadow: var(--bevel-top), 0 0 0 1px var(--green), 0 0 14px rgba(34,192,125,.35); }
+.ability-card.is-missing { border-color: var(--red);   box-shadow: var(--bevel-top), 0 0 0 1px var(--red),   0 0 14px rgba(239,68,68,.25); }
+.ability-card-name  { font-size: 12px; font-weight: 700; text-align: center; }
+.ability-card-skill { font-size: 10.5px; color: var(--ink-soft); text-align: center; }
 
 .gold-picker { display: flex; align-items: center; justify-content: center; gap: 18px; }
 .gold-picker b { font-family: 'Mali', cursive; font-size: 40px; min-width: 60px; text-align: center; color: var(--gold); }
