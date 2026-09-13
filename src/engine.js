@@ -11,6 +11,10 @@
 
 export const CARD_IDS = ['duke', 'captain', 'ambassador', 'contessa', 'assassin'];
 
+// ⚠️ ต้องตรงกับ APP_VERSION ใน js/config.js เป๊ะๆ — เพิ่มเลขนี้ทุกครั้งที่แก้กติกา/โครงสร้าง state
+// แล้ว deploy ใหม่ ห้องเก่าที่ตัวเลขไม่ตรงจะถูกปฏิเสธทันที ไม่หลุดไปพังกลางเกม
+export const APP_VERSION = '1.1.0';
+
 export const MAX_GOLD = 10;
 export const MAX_PLAYERS = 6;
 export const MIN_PLAYERS = 2;
@@ -104,6 +108,7 @@ function clearPending(pub) {
 export function newRoom(code, hostId, hostName) {
   const pub = {
     code,
+    appVersion: APP_VERSION,
     hostId,
     phase: 'lobby',        // lobby | countdown | playing | ended
     round: 1,
