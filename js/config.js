@@ -4,8 +4,13 @@
 
 // เอามาจาก Supabase → Project Settings → Data API
 // anon key เปิดเผยได้ ปลอดภัย เพราะกติกาทั้งหมดตัดสินที่ Edge Function
-export const SUPABASE_URL = 'https://mquxilriwbdbveiqlxvk.supabase.co';
-export const SUPABASE_ANON_KEY = 'sb_publishable_YdxPBj2-dwfQ4nziDQCSdA_FkHRXPJI';
+export const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
+export const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+
+// ⚠️ เพิ่มเลขนี้ทุกครั้งที่แก้กติกาเกม/โครงสร้าง state แล้ว deploy ใหม่
+// ห้องเก่าที่ appVersion ไม่ตรงจะถูกปฏิเสธอัตโนมัติทั้งฝั่ง client และ server
+// (ดูขั้นตอน deploy เต็มๆ ใน README.md หัวข้อ "อัปเดตเกมหลัง deploy ใหม่")
+export const APP_VERSION = '1.1.0';
 
 // ── รูปการ์ดของคุณ ──
 // เอาไฟล์รูปไปวางใน assets/cards/ ใช้ชื่อตามนี้ แล้วจบ ไม่ต้องแก้โค้ดที่อื่น
