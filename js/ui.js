@@ -19,7 +19,7 @@ export function el(tag, cls, text) {
  * ถ้าไฟล์รูปที่ผู้ใช้วางไว้โหลดไม่ได้ จะสลับไปใช้ไอคอนสำรองอัตโนมัติ
  * รูปที่โหลดได้จะแสดงแบบ contain — คงสัดส่วนเดิม ไม่ครอป ไม่วาดทับ
  */
-export function cardEl(cardId, { faceDown = false, lost = false, showSkill = true } = {}) {
+export function cardEl(cardId, { faceDown = false, lost = false, showSkill = true, compact = false } = {}) {
   const node = el('div', 'card' + (faceDown ? ' card-back' : '') + (lost ? ' is-lost' : ''));
   const art = el('div', 'card-art');
 
@@ -40,6 +40,7 @@ export function cardEl(cardId, { faceDown = false, lost = false, showSkill = tru
   }
   node.appendChild(art);
 
+  if (compact) return node; // ไม่โชว์ชื่อ/สกิล — ใช้ตอนแตะเพื่อดูรายละเอียดเอาเอง
   if (!faceDown && info) {
     node.appendChild(el('div', 'card-name', info.name));
     if (showSkill) node.appendChild(el('div', 'card-skill', info.skill));
@@ -69,8 +70,9 @@ export function seatEl(p, { isTurn, isMe }) {
   n.appendChild(meta);
 
   if (p.lost.length) {
-    const names = p.lost.map((c) => CHARACTERS[c]?.name || c).join(' · ');
-    n.appendChild(el('div', 'seat-lost', names));
+    const wrap = el('div', 'seat-lost-cards');
+    for (const c of p.lost) wrap.appendChild(cardEl(c, { compact: true }));
+    n.appendChild(wrap);
   }
 
   if (!p.alive) n.appendChild(el('span', 'seat-tag dead', 'ออกแล้ว'));
