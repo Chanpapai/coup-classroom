@@ -74,6 +74,9 @@ async function syncViews(roomId, priv) {
 async function mutate(code, applyEvent) {
   for (let attempt = 0; attempt < 4; attempt++) {
     const room = await loadRoom(code);
+    if (room.pub.appVersion !== APP_VERSION) {
+      fail('ห้องนี้มาจากเกมเวอร์ชันเก่า (มีการอัปเดตแล้ว) กรุณาสร้างห้องใหม่');
+    }
     const handsBefore = JSON.stringify(room.priv.hands || {});
 
     applyEvent(room.pub, room.priv);   // โยน RuleError ถ้าผิดกติกา → ไม่มีอะไรถูกเขียน
