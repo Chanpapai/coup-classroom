@@ -19,6 +19,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const CARD_IDS = ['duke', 'captain', 'ambassador', 'contessa', 'assassin'];
 
+// ⚠️ ต้องตรงกับ APP_VERSION ใน js/config.js เป๊ะๆ — เพิ่มเลขนี้ทุกครั้งที่แก้กติกา/โครงสร้าง state
+// แล้ว deploy ใหม่ ห้องเก่าที่ตัวเลขไม่ตรงจะถูกปฏิเสธทันที ไม่หลุดไปพังกลางเกม
+const APP_VERSION = '1.1.0';
+
 const MAX_GOLD = 10;
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
@@ -112,6 +116,7 @@ function clearPending(pub) {
 function newRoom(code, hostId, hostName) {
   const pub = {
     code,
+    appVersion: APP_VERSION,
     hostId,
     phase: 'lobby',        // lobby | countdown | playing | ended
     round: 1,
@@ -857,6 +862,9 @@ async function syncViews(roomId, priv) {
 async function mutate(code, applyEvent) {
   for (let attempt = 0; attempt < 4; attempt++) {
     const room = await loadRoom(code);
+    if (room.pub.appVersion !== APP_VERSION) {
+      fail('ห้องนี้มาจากเกมเวอร์ชันเก่า (มีการอัปเดตแล้ว) กรุณาสร้างห้องใหม่');
+    }
     const handsBefore = JSON.stringify(room.priv.hands || {});
 
     applyEvent(room.pub, room.priv);   // โยน RuleError ถ้าผิดกติกา → ไม่มีอะไรถูกเขียน
